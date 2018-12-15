@@ -1,0 +1,35 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[toc,page]{appendix}
+\usepackage{listings}
+\usepackage{float}
+\usepackage[a4paper,left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{lastpage}
+\title{CoAP: Publish-Subscribe APIs}
+\author{Gioele Carignani, Vincenzo Consales, Federico Rossi}
+\date{A.A 2018/2019}
+\begin{document}
+\maketitle
+\section{Introduction}
+The work proposed here is intended as an extension of the CoAP protocol to enable publish-subscriber communication paradigm, employing a \textit{Broker} node that enables store-and-forward messaging between constrained nodes that can publish (\textit{Publisher}) or subscribe \textit{Subscriber} to \textit{Topics}
+
+A \textit{Topic} is an identifier for an item being published and/or subscriber to by some nodes. 
+\section{Broker}
+The \textit{Broker} module is implemented in \texttt{Python} using the \texttt{CoAPthon} to interface with low-level CoAP APIs. The Broker module must expose following functionalities as REST API endpoints: 
+\begin{itemize}
+	\item \texttt{DISCOVERY}: allows CoAP pub/sub clients to discover the presence of pub/sub APIs on the network by answering at \texttt{GET} requests for the URI: \texttt{/.well-known/core?rt=core.ps} returning the API endpoint for the ps service. Therefore a client can issue another \texttt{GET} request at the previously obtained endpoint to get specific topics.
+	\item \texttt{CREATE}: allows CoaP pub/sub clients to create new \textit{Topics} on the Broker answering to \texttt{POST} requests for the topic URI: \texttt{/ps/ "topic-name;ct=content-type-id"}
+	\item \texttt{PUBLISH}: allows CoAP pub/sub clients to publish to topics on the Broker by answering to \texttt{PUT/POST} requests to the topic URI: \texttt{/ps/topic}. A \texttt{PUT/POST} publish will replace any stored state for the topic. If the topic does not exists, the Broker can create it when receiving a \texttt{PUT} PUBLISH for an  inexistent topic. On PUBLISH the broker must use CoAP Notification to notify subscribed clients.
+	\item \texttt{SUBSCRIBE}: allows CoAP pub/sub clients to subscribe to a Topic by answering to \texttt{GET} requests with the \textit{Observe option} set to $0$ and adding it to a list of observers for a given topic. If the topic contains a valid value at subscribing time, the response will also contain the topic state.
+	\item \texttt{UNSUBSCRIBE}: allows CoAP pub/sub clients to unsubscribe from the topic by answering to \texttt{GET} requests with \textit{Observe option} set to $1$ or answering to a \textit{CoAP Reset Message)} in response to a PUBLISH.
+	\item \texttt{READ}: allows CoAP pub/sub clients to get the topic status by answering to \texttt{GET} requests to the topic URI.
+	\item \texttt{REMOVE}: allows CoAp pub/sub clients to remove a Topic from the broker answering to \texttt{DELETE} request on the topic URI. The broker also removes all observers from the list for the topic and return a final \texttt{4.04 "Not found"} response to subscribed clients.
+\end{itemize}
+\section{Publisher-Subscriber}
+CoAP pub/sub clients are implemented using \texttt{Contiki-OS} on real sensor hardwares.
+\subsection{Publisher}
+The publisher node creates a topic on the Broker and publish values (e.g. Temperature/Humidity) at fixed rate.
+\subsection{Subscriber}
+The subscriber node discover the Broker ps APIs on the network and subscribe to some Topic (e.g. Temperature/Humidity) and read the values published by the previous node.
+\end{document}
