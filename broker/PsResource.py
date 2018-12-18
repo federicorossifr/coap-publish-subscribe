@@ -12,7 +12,7 @@ def parsePostPayload(payload):
     return payload_dict
 
 class PsResource(Resource):
-    def __init__(self, name="PsResource", coap_server=None):
+    def __init__(self, name="PsResource",coap_server=None):
         super(PsResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=True)
         self.cs = coap_server
@@ -28,6 +28,7 @@ class PsResource(Resource):
         return self, response
 
     def render_POST_advanced(self, request, response):
+        #CHECK PAYLOAD FORMAT
         payload = parsePostPayload(request.payload)
         print(request.uri_path)
         self.cs.add_resource(request.uri_path+"/"+payload["topic"],PsResource(payload["topic"],self.cs))
@@ -36,12 +37,15 @@ class PsResource(Resource):
     def render_PUT_advanced(self, request, response):
         self.payload = request.payload
         from coapthon.messages.response import Response
-        assert(isinstance(response, Response))
         response.payload = "Response changed through PUT"
         response.code = defines.Codes.CHANGED.number
         return self, response
 
     def render_DELETE_advanced(self, request, response):
+        #CHECK PAYLOAD FORMAT
+        if(request.uri_path == "ps"):
+            print("FORBIDDEN")
+            #RESPONSE CODE FORBIDDEN
         response.payload = "Response deleted"
         response.code = defines.Codes.DELETED.number
         return True, Response
