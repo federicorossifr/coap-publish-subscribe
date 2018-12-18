@@ -3,7 +3,6 @@ from PsResource import PsResource
 
 class CoAPServer(CoAP):
     def __init__(self, host, port):
-
         CoAP.__init__(self, (host, port))
         self.add_resource('ps/', PsResource("PsResource",self))
 

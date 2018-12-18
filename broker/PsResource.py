@@ -2,6 +2,19 @@ from coapthon.resources.resource import Resource
 from coapthon import defines
 from var_dump import var_dump
 
+def delete_subtree(root_resource):
+    if(len(root_resource.children) == 0):
+        print("Deleting: "+root_resource.name)
+        root_resource.cs.add_resource(root_resource.name)
+        return
+    for l in root_resource.children:
+        delete_subtree(l)
+        root_resource.remove(l)
+        if(len(root_resource.children) == 0):
+            print("Deleting: "+root_resource.name)
+            root_resource.cs.remove_resource(root_resource.name)
+
+
 def parsePostPayload(payload):
     pairs = payload.split("&");
     payload_dict = {}
@@ -20,6 +33,7 @@ class PsResource(Resource):
         self.content_type = "text/plain"
         self.interface_type = "if1"
         self.payload = "Basic Resource"
+        self.children = []
 
     def render_GET_advanced(self, request, response):
         response.payload = self.payload
@@ -31,7 +45,10 @@ class PsResource(Resource):
         #CHECK PAYLOAD FORMAT
         payload = parsePostPayload(request.payload)
         print(request.uri_path)
-        self.cs.add_resource(request.uri_path+"/"+payload["topic"],PsResource(payload["topic"],self.cs))
+        child_res = PsResource(request.uri_path+"/"+payload["topic"],self.cs)
+        self.children.append(child_res)
+        self.cs.add_resource(request.uri_path+"/"+payload["topic"],child_res)
+        response.code = defines.Codes.CREATED.number
         return self,response
 
     def render_PUT_advanced(self, request, response):
@@ -42,10 +59,13 @@ class PsResource(Resource):
         return self, response
 
     def render_DELETE_advanced(self, request, response):
+        print("Hello");
         #CHECK PAYLOAD FORMAT
         if(request.uri_path == "ps"):
             print("FORBIDDEN")
-            #RESPONSE CODE FORBIDDEN
+            response.code = defines.Codes.FORBIDDEN.number
+            return False, response
         response.payload = "Response deleted"
         response.code = defines.Codes.DELETED.number
-        return True, Response
+        delete_subtree(self);
+        return True, response
