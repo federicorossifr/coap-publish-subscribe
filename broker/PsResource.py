@@ -1,6 +1,5 @@
 from coapthon.resources.resource import Resource
 from coapthon import defines
-from var_dump import var_dump
 
 def delete_subtree(root_resource):
     if(len(root_resource.children) == 0):
