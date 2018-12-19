@@ -1,17 +1,19 @@
 from coapthon.resources.resource import Resource
 from coapthon import defines
 
-def delete_subtree(root_resource):
+def delete_subtree(root_resource,base=False):
     if(len(root_resource.children) == 0):
         print("Deleting: "+root_resource.name)
-        root_resource.cs.add_resource(root_resource.name)
+        root_resource.cs.remove_resource(root_resource.name)
         return
     for l in root_resource.children:
         delete_subtree(l)
-        root_resource.remove(l)
-        if(len(root_resource.children) == 0):
-            print("Deleting: "+root_resource.name)
-            root_resource.cs.remove_resource(root_resource.name)
+        print("Removing from children: "+l.name)
+        root_resource.children.remove(l)
+    	if(len(root_resource.children) == 0 and not base):
+        	print("Deleting: "+root_resource.name)
+        	root_resource.cs.remove_resource(root_resource.name)
+        	return        
 
 
 def parsePostPayload(payload):
@@ -66,5 +68,7 @@ class PsResource(Resource):
             return False, response
         response.payload = "Response deleted"
         response.code = defines.Codes.DELETED.number
-        delete_subtree(self);
+        print("Deleting subtree of "+self.name)
+        if(len(self.children)>0):
+            delete_subtree(self,True)
         return True, response
