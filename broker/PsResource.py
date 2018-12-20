@@ -3,15 +3,15 @@ from coapthon import defines
 import re
 def delete_subtree(root_resource,base=False):
     if(len(root_resource.children) == 0):
-        print("Deleting: "+root_resource.name)
+        print("[BROKER] Deleting: "+root_resource.name)
         root_resource.cs.remove_resource(root_resource.name)
         return
     for l in root_resource.children:
         delete_subtree(l)
-        print("Removing from children: "+l.name)
+        print("[BROKER] Removing from children: "+l.name)
         root_resource.children.remove(l)
     	if(len(root_resource.children) == 0 and not base):
-        	print("Deleting: "+root_resource.name)
+        	print("[BROKER] Deleting: "+root_resource.name)
         	root_resource.cs.remove_resource(root_resource.name)
         	return        
 
@@ -28,9 +28,8 @@ class PsResource(Resource):
         self.payload = ""
         self.children = []
 
-    def render_GET_advanced(self, request, response):
+    def render_GET_advanced(self, request, response):            
         response.payload = self.payload
-        response.max_age = 20
         response.code = defines.Codes.CONTENT.number
         return self, response
 
@@ -41,6 +40,10 @@ class PsResource(Resource):
         topicData = payload.split(";")
         topicPath = topicData[0]
         path = topicPath.replace("<","").replace(">","")
+        for res in self.children:
+            if(res.name == base+"/"+path):
+                #RESROUCE ALREADY EXISTS
+                return res
         resource = PsResource(base+"/"+path,self.cs)
         topicData.pop(0);
         attr = {}
@@ -61,17 +64,23 @@ class PsResource(Resource):
         child_res = self.createResFromPayload(request.payload,request.uri_path)
         if(child_res is None):
             response.code = defines.Codes.BAD_REQUEST.number
+            response.payload = "Bad Request"
+            return self,response
+        if(child_res in self.children):
+            response.code = defines.Codes.FORBIDDEN.number
+            response.payload = child_res.name + " Already Exists"
             return self,response
         self.children.append(child_res)
-        print(child_res.name)   
         self.cs.add_resource(child_res.name,child_res)
+        response.payload = child_res.name + " Created"
         response.code = defines.Codes.CREATED.number
+        print("[BROKER] Resource "+child_res.name+" created.");
         return self,response
 
     def render_PUT_advanced(self, request, response):
         if(request.uri_path == "ps"):
-            print("FORBIDDEN")
             response.code = defines.Codes.FORBIDDEN.number
+            response.payload = "Forbidden"
             return False, response        
         self.payload = request.payload
         response.payload = "Response changed through PUT"
@@ -79,15 +88,13 @@ class PsResource(Resource):
         return self, response
 
     def render_DELETE_advanced(self, request, response):
-        print("Hello");
-        #CHECK PAYLOAD FORMAT
         if(request.uri_path == "ps"):
-            print("FORBIDDEN")
             response.code = defines.Codes.FORBIDDEN.number
+            response.payload = "Forbidden"            
             return False, response
-        response.payload = "Response deleted"
+        response.payload = "Deleted"
         response.code = defines.Codes.DELETED.number
-        print("Deleting subtree of "+self.name)
+        print("[BROKER] Deleting subtree of "+self.name)
         if(len(self.children)>0):
             delete_subtree(self,True)
         return True, response
