@@ -1,7 +1,6 @@
 from coapthon.resources.resource import Resource
 from coapthon import defines
 import re
-pattern = r'^<topic>;(?:(ct=\w+;)|(rt=\w+;)|(rel=\w+;)|(hreflang=\w+;)|(media=\w+;)|(title=\w+;)|(if=\w+;))+$'
 def delete_subtree(root_resource,base=False):
     if(len(root_resource.children) == 0):
         print("Deleting: "+root_resource.name)
@@ -36,7 +35,7 @@ class PsResource(Resource):
         return self, response
 
     def createResFromPayload(self,payload,base):
-        if(payload is None or not re.match(r'^<(\w+)>;(?:(ct=\w+;)|(rt=\w+;)|(rel=\w+;)|(hreflang=\w+;)|(media=\w+;)|(title=\w+;)|(if=\w+;))+$',payload)):
+        if(payload is None or not re.match(r'^<(\w+)>;(?:(ct=\w+;)|(rt=\w+;)|(if=\w+;)|(sz=\w+;))+$',payload)):
             return None
         payload = payload[:-1]
         topicData = payload.split(";")
@@ -44,10 +43,17 @@ class PsResource(Resource):
         path = topicPath.replace("<","").replace(">","")
         resource = PsResource(base+"/"+path,self.cs)
         topicData.pop(0);
+        attr = {}
+        attr["obs"] = ""
         for d in topicData:
-            keyval = d.split("=")
-            print(keyval)
-            resource._attributes[keyval[0]] = keyval[1]
+            key,val = d.split("=")[0],d.split("=")[1]
+            print("[BROKER] Attr: "+key+" Val:"+val)
+            if(key == 'ct'):
+                val = [val]
+                print(val)
+            attr[key] = val
+        print(attr)
+        resource.attributes = attr
         return resource
 
 
