@@ -54,12 +54,26 @@ helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
   REST.set_response_payload(response, buffer, length);
 }
 
+void
+create_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+	REST.set_header_content_type(response, REST.type.TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
+	REST.set_header_etag(response, (uint8_t *) &length, 1);
+	REST.set_response_payload(response, buffer, length);
+}
+
 RESOURCE(helloworld,
          "title=\"Hello world: ?len=0..\";rt=\"Text\"",
          helloworld_handler,
          NULL,
          NULL,
          NULL);
+RESOURCE(create,
+		 "/ps/ \"<temperature>;ct=50\"",
+		 create_handler,
+		 NULL,
+		 NULL,
+		 NULL);
 
 static struct simple_udp_connection connection;
 
