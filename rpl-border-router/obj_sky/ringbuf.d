@@ -1,10 +1,14 @@
-obj_sky/ringbuf.o: ../../../core/lib/ringbuf.c \
- ../../../core/./lib/ringbuf.h ../../../platform/sky/./contiki-conf.h \
- ../../../platform/sky/./platform-conf.h \
- ../../../cpu/msp430/./msp430def.h project-conf.h \
- ../../../core/./sys/cc.h ../../../core/./sys/cc-gcc.h
-../../../core/lib/ringbuf.c :
- ../../../core/./lib/ringbuf.h ../../../platform/sky/./contiki-conf.h :
- ../../../platform/sky/./platform-conf.h :
- ../../../cpu/msp430/./msp430def.h project-conf.h :
- ../../../core/./sys/cc.h ../../../core/./sys/cc-gcc.h :
+obj_sky/ringbuf.o: /home/user/contiki/core/lib/ringbuf.c \
+ /home/user/contiki/core/./lib/ringbuf.h \
+ /home/user/contiki/platform/sky/./contiki-conf.h \
+ /home/user/contiki/platform/sky/./platform-conf.h \
+ /home/user/contiki/cpu/msp430/./msp430def.h project-conf.h \
+ /home/user/contiki/core/./sys/cc.h \
+ /home/user/contiki/core/./sys/cc-gcc.h
+/home/user/contiki/core/lib/ringbuf.c :
+ /home/user/contiki/core/./lib/ringbuf.h :
+ /home/user/contiki/platform/sky/./contiki-conf.h :
+ /home/user/contiki/platform/sky/./platform-conf.h :
+ /home/user/contiki/cpu/msp430/./msp430def.h project-conf.h :
+ /home/user/contiki/core/./sys/cc.h :
+ /home/user/contiki/core/./sys/cc-gcc.h :

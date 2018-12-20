@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PERIOD 1
+#define PERIOD 1000
 #define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT + 1)
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
 
@@ -69,7 +69,7 @@ set_global_address(void)
 	int i;
 	uint8_t state;
 
-	uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
+  	uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 	uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 	uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
@@ -84,6 +84,16 @@ set_global_address(void)
 				uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
 		  	}
 		}
+	}
+}
+
+static 
+void print_addresses(void)
+{
+	int i;
+	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+		uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+		printf("\n");
 	}
 }
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
@@ -121,26 +131,25 @@ PROCESS_THREAD(publisher, ev, data)
 	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-		if(etimer_expired(&periodic_timer)) {
-			printf("--Toggle timer--\n");
+		printf("--Toggle timer--\n");
 
-			/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-			coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-			coap_set_header_uri_path(request, service_urls[1]);
+		/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
+		coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+		coap_set_header_uri_path(request, service_urls[1]);
 
-			const char msg[] = "Toggle!";
+		const char msg[] = "Toggle!";
 
-			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+		coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
-			PRINT6ADDR(&broker_ipaddr);
-			PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+		PRINT6ADDR(&broker_ipaddr);
+		PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-			COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
-			                    client_chunk_handler);
+		//COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
+		//                    client_chunk_handler);
 
-			printf("\n--Done--\n");
-			etimer_reset(&periodic_timer);
-		}
+		printf("\n--Done--\n");
+		print_addresses();
+		etimer_reset(&periodic_timer);
 	}
 
 	PROCESS_END();
