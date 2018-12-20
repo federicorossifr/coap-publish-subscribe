@@ -1,6 +1,8 @@
 all: publisher
 # use this target explicitly if requried: er-plugtest-server
 
+#non so perchè ma non funziona così
+#CONTIKI=~/contiki
 CONTIKI=/home/user/contiki
 
 # linker optimizations
@@ -20,5 +22,8 @@ CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 #riduce la dimensione del firmware
 CFLAGS += -DUIP_CONF_TCP=0
+
+APPS += er-coap
+APPS += rest-engine
 
 include $(CONTIKI)/Makefile.include

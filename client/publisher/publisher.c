@@ -7,13 +7,13 @@
 #include "simple-udp.h"
 #include "contiki-net.h"
 #include "rest-engine.h"
+#include "er-coap-engine.h"
 #include <stdio.h>
 #include <string.h>
 
-#define UDP_PORT 5683
-
-#define SEND_INTERVAL   (2 * CLOCK_SECOND)
-#define SEND_TIME   (random_rand() % (SEND_INTERVAL))
+#define PERIOD 1
+#define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT + 1)
+#define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
 
 #define DEBUG 0
 #if DEBUG
@@ -25,57 +25,19 @@
 #define PRINT6ADDR(addr)
 #define PRINTLLADDR(addr)
 #endif
-/*
- * A handler function must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
-void
-helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  const char *len = NULL;
-  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
-  char const * const message = "Hello World! ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy";
-  int length = 12; /*           |<-------->| */
 
-  /* The query string can be retrieved by rest_get_query() or parsed for its key-value pairs. */
-  if (REST.get_query_variable(request, "len", &len)) {
-    length = atoi(len);
-    if (length<0) length = 0;
-    if (length>REST_MAX_CHUNK_SIZE) length = REST_MAX_CHUNK_SIZE;
-    memcpy(buffer, message, length);
-  } else {
-    memcpy(buffer, message, length);
-  }
+/* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
+//#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x7402, 0x0002, 0x0202)      /* cooja2 */
+#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0, 0, 0, 0, 0, 0, 0, 1) //localhost
 
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
-  REST.set_header_etag(response, (uint8_t *) &length, 1);
-  REST.set_response_payload(response, buffer, length);
-}
-
-void
-create_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-	REST.set_header_content_type(response, REST.type.TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
-	REST.set_header_etag(response, (uint8_t *) &length, 1);
-	REST.set_response_payload(response, buffer, length);
-}
-
-RESOURCE(helloworld,
-         "title=\"Hello world: ?len=0..\";rt=\"Text\"",
-         helloworld_handler,
-         NULL,
-         NULL,
-         NULL);
-RESOURCE(create,
-		 "/ps/ \"<temperature>;ct=50\"",
-		 create_handler,
-		 NULL,
-		 NULL,
-		 NULL);
+/* Example URIs that can be queried. */
+#define NUMBER_OF_URLS 3
+/* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
+char *service_urls[NUMBER_OF_URLS] =
+{ ".well-known/core", "/sensors/temperature", "/sensors/accelormeter"};
 
 static struct simple_udp_connection connection;
+uip_ipaddr_t broker_ipaddr;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(publisher, "publisher example process");
@@ -124,38 +86,61 @@ set_global_address(void)
 		}
 	}
 }
+/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
+void
+client_chunk_handler(void *response)
+{
+  const uint8_t *chunk;
+
+  int len = coap_get_payload(response, &chunk);
+
+  printf("|%.*s", len, (char *)chunk);
+}
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)
 {
 	static struct etimer periodic_timer;
-  	static struct etimer send_timer;
-  	uip_ipaddr_t broker_addr;
 
 	PROCESS_BEGIN();
 
 	set_global_address();
-	simple_udp_register(&connection, UDP_PORT,
+	/*simple_udp_register(&connection, UDP_PORT,
 	                  NULL, UDP_PORT,
 	                  receiver);
 	uip_ip6addr(&addr, 0xfe80, 0, 0, 0, 0xc30c, 0, 0, 0x0001); //broker address??
+	*/
+	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
-	 /* Initialize the REST engine. */
-	rest_init_engine();
+	SERVER_NODE(&broker_ipaddr);
 
-  	/* Activate the application-specific resources. */
-	rest_activate_resource(&helloworld, "hello");
+  	/* receives all CoAP messages */
+  	coap_init_engine();
 
-	simple_udp_sendto(&connection, "Test", 4, &addr);
-	etimer_set(&periodic_timer, SEND_INTERVAL);
+	etimer_set(&periodic_timer, PERIOD);
+	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-		etimer_reset(&periodic_timer);
-		etimer_set(&send_timer, SEND_TIME);
+		if(etimer_expired(&periodic_timer)) {
+			printf("--Toggle timer--\n");
 
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&send_timer));
-		printf("Sending broadcast\n");
-		uip_create_linklocal_allnodes_mcast(&addr);
-		simple_udp_sendto(&connection, "Test", 4, &addr);
+			/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
+			coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+			coap_set_header_uri_path(request, service_urls[1]);
+
+			const char msg[] = "Toggle!";
+
+			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+
+			PRINT6ADDR(&broker_ipaddr);
+			PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+
+			COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
+			                    client_chunk_handler);
+
+			printf("\n--Done--\n");
+			etimer_reset(&periodic_timer);
+		}
 	}
 
 	PROCESS_END();
