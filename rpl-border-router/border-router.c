@@ -129,7 +129,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
-  static uip_ipaddr_t ipaddr;
+  //static uip_ipaddr_t ipaddr;
   PROCESS_BEGIN();
 
 /* While waiting for the prefix to be sent through the SLIP connection, the future
