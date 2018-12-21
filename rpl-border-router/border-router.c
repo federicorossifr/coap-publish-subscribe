@@ -54,16 +54,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_FULL
 #include "net/ip/uip-debug.h"
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
 PROCESS(border_router_process, "Border router process");
+PROCESS(print_children_process,"print children");
 
-
-AUTOSTART_PROCESSES(&border_router_process);
+AUTOSTART_PROCESSES(&print_children_process, &border_router_process);
 
 #if BUF_USES_STACK
 static char *bufptr, *bufend;
@@ -111,6 +111,8 @@ request_prefix(void)
 void
 set_prefix_64(uip_ipaddr_t *prefix_64)
 {
+  printf("im setting prefix\n");
+   uip_debug_ipaddr_print(prefix_64);
   rpl_dag_t *dag;
   uip_ipaddr_t ipaddr;
   memcpy(&prefix, prefix_64, 16);
@@ -126,6 +128,25 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+iterate_children(void)
+{
+  uip_ds6_route_t *route;
+
+  /* Loop over routing entries */
+  route = uip_ds6_route_head();
+  while(route != NULL) {
+    const uip_ipaddr_t *address = &route->ipaddr;
+    const uip_ipaddr_t *nexthop = uip_ds6_route_nexthop(route);
+    if(uip_ipaddr_cmp(&address, &nexthop)) {
+       /* direct child: do somehting */
+      PRINTA(&address);
+    }
+
+    route = uip_ds6_route_next(route);
+  }
+}
+/******************************************************************************/
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
@@ -145,13 +166,13 @@ PROCESS_THREAD(border_router_process, ev, data)
   SENSORS_ACTIVATE(button_sensor);
 
   PRINTF("RPL-Border router started\n");
-#if 0
+//#if 0
    /* The border router runs with a 100% duty cycle in order to ensure high
      packet reception rates.
      Note if the MAC RDC is not turned off now, aggressive power management of the
      cpu will interfere with establishing the SLIP connection */
   NETSTACK_MAC.off(1);
-#endif
+//#endif
 
   /* Request prefix until it has been received */
   while(!prefix_set) {
@@ -178,3 +199,18 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+PROCESS_THREAD(print_children_process, ev, data)
+{
+  PROCESS_BEGIN();
+  SENSORS_ACTIVATE(button_sensor);
+
+  PRINTF("print children process started\n");
+  while(1) {
+    PROCESS_WAIT_EVENT();
+    if (ev == sensors_event && data == &button_sensor) {
+      iterate_children();
+    }
+  }
+  PROCESS_END();
+}

@@ -25,20 +25,12 @@ ifeq ($(MAKE_WITH_NON_STORING),1)
 CFLAGS += -DWITH_NON_STORING=1
 endif
 
-WITH_WEBSERVER=1
-ifeq ($(WITH_WEBSERVER),1)
-CFLAGS += -DUIP_CONF_TCP=1
-CFLAGS += -DWEBSERVER=1
-PROJECT_SOURCEFILES += httpd-simple.c
-else ifneq ($(WITH_WEBSERVER), 0)
-APPS += $(WITH_WEBSERVER)
+
 #riduce dimensioni firmware
 CFLAGS += -DUIP_CONF_TCP=0
-CFLAGS += -DWEBSERVER=2
-endif
 
 ifeq ($(PREFIX),)
- PREFIX = fd00::1/64
+ PREFIX = aaaa::1/64
 endif
 
 CONTIKI_WITH_IPV6 = 1

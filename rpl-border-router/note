@@ -1,3 +1,6 @@
 border-router: fd00::c30c:0:0:9e
 publisher: fd00::c30c:0:0:3
 
+usa ct=50
+
+make connect-router-cooja

@@ -8,7 +8,7 @@ CONTIKI=/home/user/contiki
 # linker optimizations
 SMALL=1
 
-TARGET=z1
+#TARGET=z1
 
 # for some platforms
 UIP_CONF_IPV6=1

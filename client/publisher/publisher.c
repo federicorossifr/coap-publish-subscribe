@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PERIOD 1000
+#define PERIOD 5
 #define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT + 1)
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
 
@@ -37,7 +37,7 @@ char *service_urls[NUMBER_OF_URLS] =
 { ".well-known/core", "/sensors/temperature", "/sensors/accelormeter"};
 
 static struct simple_udp_connection connection;
-uip_ipaddr_t broker_ipaddr;
+static uip_ipaddr_t broker_ipaddr;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(publisher, "publisher example process");
@@ -111,19 +111,14 @@ client_chunk_handler(void *response)
 PROCESS_THREAD(publisher, ev, data)
 {
 	static struct etimer periodic_timer;
-
+	static uip_ipaddr_t addr;
 	PROCESS_BEGIN();
 
 	set_global_address();
-	/*simple_udp_register(&connection, UDP_PORT,
-	                  NULL, UDP_PORT,
-	                  receiver);
-	uip_ip6addr(&addr, 0xfe80, 0, 0, 0, 0xc30c, 0, 0, 0x0001); //broker address??
-	*/
 	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
-
-	SERVER_NODE(&broker_ipaddr);
-
+	uip_ip6addr(&broker_ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
+	
+	// NETSTACK_MAC.off(1); //duty cycle del 100%
   	/* receives all CoAP messages */
   	coap_init_engine();
 
@@ -137,15 +132,15 @@ PROCESS_THREAD(publisher, ev, data)
 		coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 		coap_set_header_uri_path(request, service_urls[1]);
 
-		const char msg[] = "Toggle!";
+		const char msg[] = "/ps/ \"<topic1>;ct=0\"";
 
 		coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
 		PRINT6ADDR(&broker_ipaddr);
 		PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-		//COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
-		//                    client_chunk_handler);
+		COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
+		                    client_chunk_handler);
 
 		printf("\n--Done--\n");
 		print_addresses();
