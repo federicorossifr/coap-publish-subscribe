@@ -8,7 +8,7 @@ class CoAPServer(CoAP):
 
 def main():
     print("[BROKER] Starting Broker")
-    server = CoAPServer("0.0.0.0", 5683)
+    server = CoAPServer("::", 5683)
     try:
         server.listen(10)
     except KeyboardInterrupt:

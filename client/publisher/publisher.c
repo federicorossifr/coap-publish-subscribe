@@ -26,15 +26,11 @@
 #define PRINTLLADDR(addr)
 #endif
 
-/* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
-//#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x7402, 0x0002, 0x0202)      /* cooja2 */
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0, 0, 0, 0, 0, 0, 0, 1) //localhost
-
 /* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 3
+#define NUMBER_OF_URLS 5
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-char *service_urls[NUMBER_OF_URLS] =
-{ ".well-known/core", "/sensors/temperature", "/sensors/accelormeter"};
+char *service_urls[] =
+{ ".well-known/core", "ps", "ps/topic1", "/ps/sensors", "ps/sensors/accelorometer"};
 
 static struct simple_udp_connection connection;
 static uip_ipaddr_t broker_ipaddr;
@@ -110,6 +106,7 @@ client_chunk_handler(void *response)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)
 {
+	static int created = 0;
 	static struct etimer periodic_timer;
 	static uip_ipaddr_t addr;
 	PROCESS_BEGIN();
@@ -129,20 +126,24 @@ PROCESS_THREAD(publisher, ev, data)
 		printf("--Toggle timer--\n");
 
 		/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-		coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-		coap_set_header_uri_path(request, service_urls[1]);
+		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+		coap_set_header_uri_path(request, service_urls[2]);
 
-		const char msg[] = "/ps/ \"<topic1>;ct=0\"";
-
+		//create!!!!!
+		//const char msg[] = "<topic1>;ct=0;"; 
+		
+		const char msg[] = "120";
 		coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 
 		PRINT6ADDR(&broker_ipaddr);
 		PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
-
-		COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
-		                    client_chunk_handler);
-
-		printf("\n--Done--\n");
+		
+		if( created == 0 ){
+			COAP_BLOCKING_REQUEST(&broker_ipaddr, REMOTE_PORT, request,
+				            client_chunk_handler);
+			printf("\n--Done--\n");
+			created = 1;
+		}
 		print_addresses();
 		etimer_reset(&periodic_timer);
 	}
