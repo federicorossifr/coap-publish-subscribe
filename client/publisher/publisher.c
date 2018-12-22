@@ -1,5 +1,4 @@
 #include "contiki.h"
-#include "sys/etimer.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "contiki-net.h"
@@ -38,7 +37,7 @@ set_global_address(void)
 	uint8_t state;
 
   	uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-	uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+	//uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 	uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
 	printf("IPv6 addresses: ");
@@ -100,15 +99,23 @@ static
 void update_topic(const uip_ipaddr_t *broker_addr, 
 				  const char *service_url, 
 				  const char *new_value, 
-				  uint8_t len,
-				  coap_packet_t *request)
+				  uint8_t len)
 {
-	coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-	coap_set_header_uri_path(request, service_url);
+	static coap_packet_t pkt[1];
+	int h_size = 0;
+	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, 0);
+	coap_set_header_uri_path(pkt, service_url);
 
-	coap_set_payload(request, (uint8_t *)new_value, len);
+	coap_set_payload(pkt, (uint8_t *)new_value, len);
+	if( coap_get_header_size1(pkt, h_size) )
+		len += h_size;
+	if( coap_get_header_size2(pkt, h_size) )
+		len += h_size;
+	printf("len=%d\n",len);
+	coap_send_message(broker_addr, REMOTE_PORT, pkt, len+23);
 }
 
+#define PERIOD 0.5
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)
 {
@@ -120,33 +127,30 @@ PROCESS_THREAD(publisher, ev, data)
 	static coap_packet_t request[1];
 	PROCESS_BEGIN();
 
-	set_global_address();
+//	set_global_address();
 	
 	uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
 	
-	// NETSTACK_MAC.off(1); //duty cycle del 100%
   	/* receives all CoAP messages */
   	coap_init_engine();
-	etimer_set(&periodic_timer, CLOCK_SECOND);
+	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);
 
-	PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
+/*	PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
 	create_topic(&broker_addr, "ps", "sensors", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-	PRINTF("topic ps/sensors created\n");
 	etimer_reset(&periodic_timer);
-	
+
 	PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
 	create_topic(&broker_addr, "ps/sensors", "accelorometer", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-	PRINTF("topic ps/sensors/accelorometer created\n");
-	etimer_reset(&periodic_timer);
+	etimer_reset(&periodic_timer); */
 
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
 		PRINTF("I update_topic i=%d \n",i);
 		sprintf(buf,"%d",i);
-		update_topic(&broker_addr, "ps/sensors/accelorometer", buf, DIM, request);
-		COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+		update_topic(&broker_addr, "ps/sensors/accelorometer", buf, DIM);
+		//COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		etimer_reset(&periodic_timer);
 		i++;
 	}
