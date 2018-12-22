@@ -21,7 +21,7 @@
 #endif
 
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-char *service_urls[] =
+char *urls[] =
 { ".well-known/core", "ps", "ps/sensors", "ps/sensors/accelorometer"};
 
 /*---------------------------------------------------------------------------*/
@@ -45,33 +45,32 @@ client_chunk_handler(void *response)
 
   int len = coap_get_payload(response, &chunk);
 
-  printf("|%.*s", len, (char *)chunk);
+  printf("|%.*s\n", len, (char *)chunk);
 }
 
-static 
+static char buf_create[64]; 
 void create_topic(const uip_ipaddr_t *broker_addr, 
 				  const char *service_url, 
 				  const char *topic_name, 
 				  coap_packet_t *request)
 {  
-	// implementare il secure coding
-	char msg[256];
+	memset(buf_create,0,64);
 	/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
 	coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 	coap_set_header_uri_path(request, service_url);
 
 	//create!!!!!
 	//const char msg[] = "<topic1>;ct=0;";
-	strcat(msg, "<");
-	strcat(msg, topic_name);
-	strcat(msg, ">;ct=0;"); 
-	coap_set_payload(request, (uint8_t *)msg, strlen(msg));
+	strcat(buf_create, "<");
+	strcat(buf_create, topic_name);
+	strcat(buf_create, ">;ct=0;"); 
+	printf("msg=%s l=%d\n",buf_create,strlen(buf_create));
+	coap_set_payload(request, (uint8_t *)buf_create, strlen(buf_create));
 }
 
-static 
 void update_topic(const uip_ipaddr_t *broker_addr, 
-				  const char *service_url, 
-				  const char *new_value, 
+				  char *service_url, 
+				  char *new_value, 
 				  uint8_t len)
 {
 	static coap_packet_t pkt[1];
@@ -88,38 +87,34 @@ void update_topic(const uip_ipaddr_t *broker_addr,
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)
 {
+	PROCESS_BEGIN();	
 	static uint16_t i = -1;
 #define DIM 8
 	static char buf[DIM];
 	static struct etimer periodic_timer;
 	static uip_ipaddr_t broker_addr;
-	static coap_packet_t request[1];
-	PROCESS_BEGIN();	
+	coap_packet_t request[1];
 	uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
 	//uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
-
-  	/* receives all CoAP messages */
+	
+	/* receives all CoAP messages */
   	coap_init_engine();
-	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);
+	printf("coap_init done\n");		  
 
-	PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-	create_topic(&broker_addr, "ps", "sensors", request);
+	create_topic(&broker_addr, urls[1], "sensors", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-	etimer_reset(&periodic_timer);
-
-	PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-	create_topic(&broker_addr, "ps/sensors", "accelorometer", request);
+		
+	create_topic(&broker_addr, urls[2], "accelorometer", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-	etimer_reset(&periodic_timer); 
 
+	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-		PRINTF("I update_topic i=%d \n",i);
 		sprintf(buf,"%d",i);
-		update_topic(&broker_addr, "ps/sensors/accelorometer", buf, DIM);
+		i++;
+		update_topic(&broker_addr, urls[3], buf, DIM);
 		//COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		etimer_reset(&periodic_timer);
-		i++;
 	}
 
 	PROCESS_END();
