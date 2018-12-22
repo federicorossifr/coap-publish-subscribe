@@ -1,0 +1,16 @@
+version: '2.1'
+
+services:
+  app:
+    build: .
+    ports:
+        - "5683:5683"
+    networks:
+      app_net:
+        ipv6_address: "2402:9400:1000:7::FFFF"
+networks:
+  app_net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "2402:9400:1000:7::/64"
