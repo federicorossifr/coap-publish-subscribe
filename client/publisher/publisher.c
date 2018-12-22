@@ -28,32 +28,6 @@ char *service_urls[] =
 PROCESS(publisher, "publisher example process");
 AUTOSTART_PROCESSES(&publisher);
 /*---------------------------------------------------------------------------*/
-
-static void
-set_global_address(void)
-{
-	uip_ipaddr_t ipaddr;
-	int i;
-	uint8_t state;
-
-  	uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-	//uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-	uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-
-	printf("IPv6 addresses: ");
-	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-		state = uip_ds6_if.addr_list[i].state;
-		if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-			uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-			printf("\n");
-		  	/* hack to make address "final" */
-			if (state == ADDR_TENTATIVE) {
-				uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-		  	}
-		}
-	}
-}
-
 static 
 void print_addresses(void)
 {
@@ -82,7 +56,6 @@ void create_topic(const uip_ipaddr_t *broker_addr,
 {  
 	// implementare il secure coding
 	char msg[256];
-	memset(msg,0,256);
 	/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
 	coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 	coap_set_header_uri_path(request, service_url);
@@ -104,7 +77,7 @@ void update_topic(const uip_ipaddr_t *broker_addr,
 	static coap_packet_t pkt[1];
 	static uint8_t pkt_serialized[256];
 	static size_t size_pkt;
-	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, 0);
+	coap_init_message(pkt, COAP_TYPE_CON, COAP_PUT, 0);
 	coap_set_header_uri_path(pkt, service_url);
 	coap_set_payload(pkt, (uint8_t *)new_value, len);
 	size_pkt = coap_serialize_message(pkt, pkt_serialized);
@@ -121,12 +94,10 @@ PROCESS_THREAD(publisher, ev, data)
 	static struct etimer periodic_timer;
 	static uip_ipaddr_t broker_addr;
 	static coap_packet_t request[1];
-	PROCESS_BEGIN();
-
-//	set_global_address();
-	
+	PROCESS_BEGIN();	
 	uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
-	
+	//uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
+
   	/* receives all CoAP messages */
   	coap_init_engine();
 	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);
