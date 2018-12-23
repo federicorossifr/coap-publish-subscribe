@@ -1,4 +1,5 @@
 #include "../commons.h"
+#include "dev/tmp102.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(publisher, "publisher example process");
@@ -38,7 +39,8 @@ void create_topic(const uip_ipaddr_t *broker_addr,
 void 
 json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 {
-	snprintf(buf_out, buf_size, "{\"temp\" : %d, \"udm\" : \"°C\" }",temp);
+	static uint16_t sample_n = 0;
+	snprintf(buf_out, buf_size, "{\"temp\" : %d, \"udm\" : \"°C. \"sa_n\" : %u \" }",temp, sample_n);
 }
 
 #define PERIOD 1
@@ -46,15 +48,18 @@ json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 PROCESS_THREAD(publisher, ev, data)
 {
 	PROCESS_BEGIN();	
-	static uint16_t i = -1;
 #define DIM 48
 	static char buf[DIM];
+	int16_t temp;
 	static struct etimer periodic_timer;
 	static uip_ipaddr_t broker_addr;
 	coap_packet_t request[1];
 	//uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
 	uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
 	
+	/* I activate sensor for temperature */
+	SENSORS_ACTIVATE(tmp102);
+
 	/* receives all CoAP messages */
   	coap_init_engine();
 	printf("coap_init done\n");		  
@@ -68,10 +73,11 @@ PROCESS_THREAD(publisher, ev, data)
 	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-		json_temp_msg(i,buf,DIM);
+		temp = tmp102.value(TMP102_READ);
+		json_temp_msg(temp,buf,DIM);
 		update_topic(&broker_addr, urls[3], buf, DIM);
 		//COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-		i++; etimer_reset(&periodic_timer);
+		etimer_reset(&periodic_timer);
 	}
 
 	PROCESS_END();
