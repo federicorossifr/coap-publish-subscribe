@@ -18,30 +18,12 @@ client_chunk_handler(void *response)
   printf("|%.*s\n", len, (char *)chunk);
 }
 
-#define DIM_BUF_CREATE 64
-static char buf_create[DIM_BUF_CREATE]; 
-void create_topic(const uip_ipaddr_t *broker_addr, 
-				  const char *service_url, 
-				  const char *topic_name,
-				  const char *ct, 
-				  coap_packet_t *request)
-{  
-	memset(buf_create,0,DIM_BUF_CREATE);
-	/* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-	coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-	coap_set_header_uri_path(request, service_url);
-	snprintf(buf_create, DIM_BUF_CREATE, "<%s>;ct=%s;",topic_name,ct);
-
-	PRINTF("msg=%s l=%d\n",buf_create,strlen(buf_create));
-	coap_set_payload(request, (uint8_t *)buf_create, strlen(buf_create));
-}
-
-
 void 
 json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 {
 	static uint16_t sample_n = 0;
 	snprintf(buf_out, buf_size, "{\"temp\" : %d, \"udm\" : \"°C. \"sa_n\" : %u \" }",temp, sample_n);
+	sample_n++;
 }
 
 #define PERIOD 1
