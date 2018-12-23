@@ -25,6 +25,16 @@
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 const char *urls[] = {".well-known/core", "ps", "ps/sensors", "ps/sensors/accelorometer"};
 
+//static uip_ipaddr_t broker_addr[1]; /* holds the server ip address */
+//#define SERVER_NODE(broker_addr)    uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
+
+char* mystrcat( char* dest, char* src )
+{
+     while (*dest) dest++;
+     while (*dest++ = *src++);
+     return --dest;
+}
+
 void print_addresses(void){
 	int i;
 	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
