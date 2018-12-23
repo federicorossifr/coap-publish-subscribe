@@ -3,7 +3,7 @@ all: publisher
 
 #non so perchè ma non funziona così
 #CONTIKI=~/contiki
-CONTIKI=/home/user/contiki
+CONTIKI=/home/$(USER)/contiki
 
 # linker optimizations
 SMALL=1
