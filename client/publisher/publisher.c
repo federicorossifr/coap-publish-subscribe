@@ -68,7 +68,10 @@ PROCESS_THREAD(publisher, ev, data)
 	create_topic(&broker_addr, urls[1], "sensors", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		
-	create_topic(&broker_addr, urls[2], "accelorometer", "0", request);
+	create_topic(&broker_addr, urls[2], "temperature", "0", request);
+	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+
+	create_topic(&broker_addr, urls[2], "accelerometer", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
 	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);	
