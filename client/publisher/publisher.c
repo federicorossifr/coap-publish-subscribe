@@ -94,8 +94,8 @@ PROCESS_THREAD(publisher, ev, data)
 	static struct etimer periodic_timer;
 	static uip_ipaddr_t broker_addr;
 	coap_packet_t request[1];
-	uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
-	//uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
+	//uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
+	uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
 	
 	/* receives all CoAP messages */
   	coap_init_engine();
