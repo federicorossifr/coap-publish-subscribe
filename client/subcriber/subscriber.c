@@ -1,7 +1,7 @@
 #include "../commons.h"
 #include "./observe.h"
 
-#define SERVER_NODE(ipaddr)    uip_ip6addr(ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
+#define SERVER_NODE(ipaddr)    uip_ip6addr(ipaddr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF); 
 
 
 #define PERIOD 5
