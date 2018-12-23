@@ -1,5 +1,6 @@
 from coapthon.server.coap import CoAP
 from PsResource import PsResource
+import sys
 
 class CoAPServer(CoAP):
     def __init__(self, host, port):	
@@ -8,6 +9,7 @@ class CoAPServer(CoAP):
 
 def main():
     print("[BROKER] Starting Broker")
+    sys.stdout.flush()    
     server = CoAPServer("::", 5683)
     try:
         server.listen(10)
