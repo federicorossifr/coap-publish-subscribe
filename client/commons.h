@@ -42,7 +42,7 @@ void print_addresses(void){
 	}
 }
 
-#if PUBLISHER
+
 #define DIM_BUF_CREATE 64
 static char buf_create[DIM_BUF_CREATE]; 
 void create_topic(const uip_ipaddr_t *broker_addr, 
@@ -75,6 +75,6 @@ void update_topic(const uip_ipaddr_t *broker_addr,
 	size_pkt = coap_serialize_message(pkt, pkt_serialized);
 	coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
 }
-#endif
+
 
 #endif
