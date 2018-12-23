@@ -3,8 +3,8 @@
 
 #include "er-coap.h"
 #include "er-coap-observe-client.h"
-
-#define DEBUG 0
+/*
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -15,7 +15,7 @@
 #define PRINT6ADDR(addr)
 #define PRINTLLADDR(addr)
 #endif
-
+*/
 MEMB(obs_subjects_memb, coap_observee_t, COAP_MAX_OBSERVEES);
 LIST(obs_subjects_list);
 
