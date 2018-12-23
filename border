@@ -1,0 +1,2 @@
+cd ~/contiki/examples/ipv6/rpl-border-router
+make connect-router-cooja
