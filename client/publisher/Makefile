@@ -1,8 +1,15 @@
 all: publisher
 # use this target explicitly if requried: er-plugtest-server
 
-#non so perchè ma non funziona così
-#CONTIKI=~/contiki
+publisher: commons.a
+
+commons.o: ../commons.c ../commons.h
+	msp430-gcc -mmcu=msp430x261 -c ../commons.c -o ../commons.o
+
+commons.a: commons.o
+	msp430-ar -cvq ../commons.a ../commons.o
+	cp ../commons.a ./commons.a
+
 CONTIKI=/home/$(USER)/contiki
 
 # linker optimizations
@@ -23,5 +30,7 @@ CFLAGS += -DUIP_CONF_TCP=0
 
 APPS += er-coap
 APPS += rest-engine
+
+#TARGET_LIBFILES += -L. -lcommons
 
 include $(CONTIKI)/Makefile.include
