@@ -78,12 +78,16 @@ class PsResource(Resource):
         return self,response
 
     def render_PUT_advanced(self, request, response):
+        print(request.uri_path)
         if(request.uri_path == "ps"):
             response.code = defines.Codes.FORBIDDEN.number
             response.payload = "Forbidden"
             return False, response        
         self.payload = request.payload
-        response.payload = "Response changed through PUT"
+        if(response.code == defines.Codes.CREATED.number):
+            response.payload = "Created"
+            return self,response
+        response.payload = "Changed"
         response.code = defines.Codes.CHANGED.number
         return self, response
 
