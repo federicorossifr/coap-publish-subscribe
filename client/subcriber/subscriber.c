@@ -66,7 +66,7 @@ static void notification_callback(coap_observee_t *obs, void *notification,coap_
     break;
   }
 }
-void toggle_observation(void)
+void toggle_observation(uip_ip6addr_t* broker_addr)
 {
   if(obs) {
     printf("Stopping observation\n");
@@ -101,7 +101,7 @@ PROCESS_THREAD(subscriber, ev, data){
     PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
     sprintf(buf,"%d",i);
     i++;
-    toggle_observation();
+    toggle_observation(&broker_addr);
     etimer_reset(&periodic_timer);
   }
     
