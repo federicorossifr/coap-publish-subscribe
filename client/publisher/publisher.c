@@ -1,4 +1,5 @@
 #include "../commons.h"
+#include "dev/i2cmaster.h"
 #include "dev/tmp102.h"
 
 /*---------------------------------------------------------------------------*/
@@ -73,7 +74,8 @@ PROCESS_THREAD(publisher, ev, data)
 	etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND);	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-		temp = tmp102.value(TMP102_READ);
+		//temp = tmp102.value(TMP102_READ);
+		temp = tmp102_read_temp_x100();
 		json_temp_msg(temp,buf,DIM);
 		update_topic(&broker_addr, urls[3], buf, DIM);
 		//COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
