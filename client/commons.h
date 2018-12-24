@@ -68,18 +68,15 @@ void update_topic(const uip_ipaddr_t *broker_addr,
 {
 	static coap_packet_t pkt[1];
 	static coap_transaction_t transaction[1];
-	static uint8_t pkt_serialized[256];
+	static uint8_t pkt_serialized[127];
 	static size_t size_pkt;
-	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, 0);
+	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, coap_get_mid());
 	coap_set_header_uri_path(pkt, service_url);
 	coap_set_payload(pkt, (uint8_t *)new_value, len);
-	pkt->mid = coap_get_mid();
-	transaction = coap_new_transaction(pkt->mid, broker_addr, REMOTE_PORT);
-	transaction->packet_len = coap_serialize_message(request, transaction->packet);
 
-	//size_pkt = coap_serialize_message(pkt, pkt_serialized);
-	//coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
-	coap_send_transaction(transaction);
+	size_pkt = coap_serialize_message(pkt, pkt_serialized);
+	coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
+	printf("update_topic. size_pkt:%d\n",size_pkt);
 }
 
 
