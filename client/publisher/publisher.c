@@ -60,7 +60,7 @@ print_int(uint16_t reg)
 	printf("\n");
 }
 
-#define ACCM_READ_INTERVAL   0.5
+#define ACCM_READ_INTERVAL   10
 #define TEMP_READ_INTERVAL	 20
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)

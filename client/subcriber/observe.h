@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-
 #include "er-coap.h"
 #include "er-coap-observe-client.h"
 /*
@@ -19,7 +18,6 @@
 MEMB(obs_subjects_memb, coap_observee_t, COAP_MAX_OBSERVEES);
 LIST(obs_subjects_list);
 
-/*----------------------------------------------------------------------------
 static size_t
 get_token(void *packet, const uint8_t **token)
 {
@@ -29,7 +27,6 @@ get_token(void *packet, const uint8_t **token)
 
   return coap_pkt->token_len;
 }
-----------------------------------------------------------------------------*/
 static int
 set_token(void *packet, const uint8_t *token, size_t token_len)
 {
@@ -40,8 +37,6 @@ set_token(void *packet, const uint8_t *token, size_t token_len)
 
   return coap_pkt->token_len;
 }
-/*----------------------------------------------------------------------------*/
-///////////////KEEPPPPPPPPPPPPPPPPPPPPPPPPPP
 coap_observee_t *
 coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
                       const uint8_t *token, size_t token_len, const char *url,
@@ -49,8 +44,6 @@ coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
                       void *data)
 {
   coap_observee_t *o;
-
-  /* Remove existing observe relationship, if any. */
   coap_obs_remove_observee_by_url(addr, port, url);
   o = memb_alloc(&obs_subjects_memb);
   if(o) {
@@ -70,8 +63,6 @@ coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
 
   return o;
 }
-/*----------------------------------------------------------------------------*/
-////KEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 void
 coap_obs_remove_observee(coap_observee_t *o)
 {
@@ -80,7 +71,6 @@ coap_obs_remove_observee(coap_observee_t *o)
   memb_free(&obs_subjects_memb, o);
   list_remove(obs_subjects_list, o);
 }
-/*----------------------------------------------------------------------------
 coap_observee_t *
 coap_get_obs_subject_by_token(const uint8_t *token, size_t token_len)
 {
@@ -97,7 +87,6 @@ coap_get_obs_subject_by_token(const uint8_t *token, size_t token_len)
 
   return NULL;
 }
-----------------------------------------------------------------------------
 int
 coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
                                   uint8_t *token, size_t token_len)
@@ -118,7 +107,6 @@ coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
   }
   return removed;
 }
-----------------------------------------------------------------------------*/
 int
 coap_obs_remove_observee_by_url(uip_ipaddr_t *addr, uint16_t port,
                                 const char *url)
@@ -138,7 +126,6 @@ coap_obs_remove_observee_by_url(uip_ipaddr_t *addr, uint16_t port,
   }
   return removed;
 }
-/*----------------------------------------------------------------------------
 static void
 simple_reply(coap_message_type_t type, uip_ip6addr_t *addr, uint16_t port,
              coap_packet_t *notification)
@@ -150,7 +137,6 @@ simple_reply(coap_message_type_t type, uip_ip6addr_t *addr, uint16_t port,
   len = coap_serialize_message(response, uip_appdata);
   coap_send_message(addr, port, uip_appdata, len);
 }
----------------------------------------------------------------------------*/
 static coap_notification_flag_t
 classify_notification(void *response, int first)
 {
@@ -175,7 +161,6 @@ classify_notification(void *response, int first)
   }
   return NOTIFICATION_OK;
 }
-/*----------------------------------------------------------------------------
 void
 coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
                          coap_packet_t *notification)
@@ -220,7 +205,7 @@ coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
     obs->notification_callback(obs, notification, flag);
   }
 }
-----------------------------------------------------------------------------*/
+
 static void
 handle_obs_registration_response(void *data, void *response)
 {
@@ -239,7 +224,6 @@ handle_obs_registration_response(void *data, void *response)
     coap_obs_remove_observee(obs);
   }
 }
-/*----------------------------------------------------------------------------*/
 uint8_t
 coap_generate_token(uint8_t **token_ptr)
 {
@@ -250,8 +234,7 @@ coap_generate_token(uint8_t **token_ptr)
   *token_ptr = (uint8_t *)&token;
   return sizeof(token);
 }
-/*----------------------------------------------------------------------------*/
-/////////////////////KEEEEPPPPPPPPPPPPPP
+
 coap_observee_t *
 coap_obs_request_registration(uip_ipaddr_t *addr, uint16_t port, char *uri,
                               notification_callback_t notification_callback,
