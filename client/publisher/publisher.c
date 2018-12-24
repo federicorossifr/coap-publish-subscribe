@@ -98,14 +98,21 @@ PROCESS_THREAD(publisher, ev, data)
 		if( etimer_expired(&temp_timer) ) {
 			temp = tmp102_read_temp_x100();
 			json_temp_msg(temp, buf, DIM);
-			update_topic(&broker_addr, urls[3], buf, DIM);
+			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+			coap_set_header_uri_path(request, urls[4]);
+			coap_set_payload(request, buf, DIM);
+			COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler)
 			etimer_reset(&temp_timer);
 		} else if ( etimer_expired(&acc_timer) ) {
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
 			json_accm_msg(x, y, z, buf, DIM);
-			update_topic(&broker_addr, urls[4], buf, DIM);
+			//update_topic(&broker_addr, urls[4], buf, DIM);
+			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+			coap_set_header_uri_path(request, urls[4]);
+			coap_set_payload(request, buf, DIM);
+			COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler)
 			etimer_reset(&acc_timer);
 		}
 	}
