@@ -5,11 +5,13 @@
 
 
 
-#define WARMUP 30
+#define WARMUP 60
 #define OBSERVE_TIME 200
 #define DIM 8
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-static coap_observee_t *obs = NULL;
+static coap_observee_t *obsT = NULL;
+static coap_observee_t *obsA = NULL;
+
 static uip_ipaddr_t server_ipaddr[1]; /* holds the server ip address */
 
 
@@ -40,11 +42,11 @@ client_chunk_handler(void *response)
   printf("|%.*s\n", len, (char *)chunk);
 }*/
 //////////////SUBSCRIBE////////////////////////////////////////
+//Handles the response to the observe request and the following notifications
 static void notification_callback(coap_observee_t *obs, void *notification,coap_notification_flag_t flag){
+  printf("Notification handler\n");
   int len = 0;
   const uint8_t *payload = NULL;
-
-  printf("Notification handler\n");
   printf("Observe URI: %s\n", obs->url);
   if(notification) {
     len = coap_get_payload(notification, &payload);
@@ -75,17 +77,12 @@ static void notification_callback(coap_observee_t *obs, void *notification,coap_
     break;
   }
 }
-coap_observee_t * observe(char * uri)
-{
-  //if(obs) {
-    //printf("Stopping observation\n");
-    //coap_obs_remove_observee(obs);
-    //obs = NULL;
-  //} else {
-    printf("Starting observation\n");
-    return coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
-  //}
+//observe the resource specified by the string uri
+coap_observee_t * observe(char * uri){
+  printf("Starting observation\n");
+  return coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
 }
+//unsubscribe from the specific observe resource
 void remove_observe(coap_observee_t *o){
   printf("Stopping observation\n");
   coap_obs_remove_observee(o);
@@ -103,14 +100,17 @@ PROCESS_THREAD(subscriber, ev, data){
   
   /* receives all CoAP messages */
   coap_init_engine();
+  //wait for the subscriber to load
   etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND); 
   PROCESS_WAIT_EVENT();
-  obs = observe((char *)urls[4]); 
-
+  obsA = observe((char *)urls[4]); 
+  obsT = observe((char *)urls[3]); 
+  //after a certain period unsubscribe from observing
   etimer_set(&periodic_timer, OBSERVE_TIME*CLOCK_SECOND); 
   PROCESS_WAIT_EVENT();
-  remove_observe(obs);
-  obs = NULL;
+  remove_observe(obsA);
+  remove_observe(obsT);
+  obsA = obsT = NULL;
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
