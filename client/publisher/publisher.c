@@ -8,6 +8,7 @@ PROCESS(publisher, "publisher example process");
 AUTOSTART_PROCESSES(&publisher);
 /*---------------------------------------------------------------------------*/
 
+// 2402:9400:1000:7::ffff
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(void *response)
@@ -19,19 +20,23 @@ client_chunk_handler(void *response)
 	printf("|%.*s\n", len, (char *)chunk);
 }
 
-void 
+uint8_t
 json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 {
 	static uint16_t sample_n = 0;
+	memset(buf_out,0,buf_size);
 	snprintf(buf_out, buf_size, "{\"temp\":%d,\"udm\":\"°C\",sa_n\":%u\"}",temp, sample_n);
 	sample_n++;
+	return strlen(buf_out)+1;
 }
 
 
-void 
+uint8_t 
 json_accm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
+	memset(buf_out,0,buf_size);
 	snprintf(buf_out, buf_size, "{\"x\":%d,\"y\":%d,\"z\":%d}",x ,y, z);
+	return strlen(buf_out)+1;
 }
 
 void
@@ -63,6 +68,7 @@ PROCESS_THREAD(publisher, ev, data)
 	PROCESS_BEGIN();	
 #define DIM 48
 	static char buf[DIM];
+	uint8_t size_msg = 0;
 	int16_t temp;
 	int16_t x, y, z;
 	static struct etimer temp_timer;
@@ -97,15 +103,15 @@ PROCESS_THREAD(publisher, ev, data)
 		PROCESS_WAIT_EVENT();
 		if( etimer_expired(&temp_timer) ) {
 			temp = tmp102_read_temp_x100();
-			json_temp_msg(temp, buf, DIM);
-			update_topic(&broker_addr, urls[3], buf, DIM);
+			size_msg = json_temp_msg(temp, buf, DIM);
+			update_topic(&broker_addr, urls[3], buf, size_msg);
 			etimer_reset(&temp_timer);
 		} else if ( etimer_expired(&acc_timer) ) {
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
-			json_accm_msg(x, y, z, buf, DIM);
-			update_topic(&broker_addr, urls[4], buf, DIM);
+			size_msg = json_accm_msg(x, y, z, buf, DIM);
+			update_topic(&broker_addr, urls[4], buf, size_msg);
 			etimer_reset(&acc_timer);
 		}
 	}
