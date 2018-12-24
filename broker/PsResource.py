@@ -1,6 +1,8 @@
 from coapthon.resources.resource import Resource
 from coapthon import defines
 import re
+import sys
+
 def delete_subtree(root_resource,base=False):
     if(len(root_resource.children) == 0):
         print("[BROKER] Deleting: "+root_resource.name)
@@ -31,6 +33,11 @@ class PsResource(Resource):
     def render_GET_advanced(self, request, response):            
         response.payload = self.payload
         response.code = defines.Codes.CONTENT.number
+        if(request.observe == 0):
+            host, port = request.source
+            print("[BROKER] Binding observe to: "+host)
+            sys.stdout.flush()    
+
         return self, response
 
     def createResFromPayload(self,payload,base):
@@ -57,7 +64,9 @@ class PsResource(Resource):
             attr[key] = val
         print(attr)
         resource.attributes = attr
+        sys.stdout.flush()    
         return resource
+
 
 
     def render_POST_advanced(self, request, response):
@@ -75,15 +84,19 @@ class PsResource(Resource):
         response.payload = child_res.name + " Created"
         response.code = defines.Codes.CREATED.number
         print("[BROKER] Resource "+child_res.name+" created.");
+        sys.stdout.flush()            
         return self,response
 
     def render_PUT_advanced(self, request, response):
         print(request.uri_path)
+        sys.stdout.flush()                    
         if(request.uri_path == "ps"):
             response.code = defines.Codes.FORBIDDEN.number
             response.payload = "Forbidden"
             return False, response        
         self.payload = request.payload
+        print("[BROKER] "+self.name+" updated with content: "+request.payload)
+        sys.stdout.flush()            
         if(response.code == defines.Codes.CREATED.number):
             response.payload = "Created"
             return self,response
@@ -99,6 +112,7 @@ class PsResource(Resource):
         response.payload = "Deleted"
         response.code = defines.Codes.DELETED.number
         print("[BROKER] Deleting subtree of "+self.name)
+        sys.stdout.flush()    
         if(len(self.children)>0):
             delete_subtree(self,True)
         return True, response
