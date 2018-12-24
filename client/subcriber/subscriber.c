@@ -4,6 +4,7 @@
 #define SERVER_NODE(ipaddr)    uip_ip6addr(ipaddr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF); 
 
 
+
 #define PERIOD 30
 #define DIM 8
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
@@ -46,7 +47,8 @@ static void notification_callback(coap_observee_t *obs, void *notification,coap_
   printf("Observe URI: %s\n", obs->url);
   if(notification) {
     len = coap_get_payload(notification, &payload);
-    printf("payload: %d\n", (int)payload);
+    printf("len %d\n",len);
+    printf("payload: %.*s\n",len, (char*)payload);
   }
   printf("%d\n",flag);
   switch(flag) {
@@ -102,7 +104,7 @@ PROCESS_THREAD(subscriber, ev, data){
       PRINTF("timer expired");
       sprintf(buf,"%d",i);
       i++;
-      observe((char *)urls[3]);
+      observe((char *)urls[4]);
       etimer_reset(&periodic_timer);
     }
   }
