@@ -1,9 +1,15 @@
 #include "../commons.h"
+#include "./observe.h"
 
-#define PERIOD 1
+#define SERVER_NODE(ipaddr)    uip_ip6addr(ipaddr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF); 
+
+
+#define PERIOD 30
 #define DIM 8
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 static coap_observee_t *obs = NULL;
+static uip_ipaddr_t server_ipaddr[1]; /* holds the server ip address */
+
 
 /*---------------------------------------------------------------------------*/
 PROCESS(subscriber, "subscriber example process");
@@ -66,16 +72,16 @@ static void notification_callback(coap_observee_t *obs, void *notification,coap_
     break;
   }
 }
-void toggle_observation(void)
+void observe(char * uri)
 {
-  if(obs) {
-    printf("Stopping observation\n");
-    coap_obs_remove_observee(obs);
-    obs = NULL;
-  } else {
+  //if(obs) {
+    //printf("Stopping observation\n");
+    //coap_obs_remove_observee(obs);
+    //obs = NULL;
+  //} else {
     printf("Starting observation\n");
-    obs = coap_obs_request_registration(broker_addr, REMOTE_PORT,urls[3], notification_callback, NULL);
-  }
+    obs = coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
+  //}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -84,25 +90,21 @@ PROCESS_THREAD(subscriber, ev, data){
   static uint16_t i = -1;
   static char buf[DIM];
   static struct etimer periodic_timer;
-  static uip_ipaddr_t broker_addr;
-  //coap_packet_t request[1];
-  //SERVER_NODE(broker_addr);
-  uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
-  //uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
+  SERVER_NODE(server_ipaddr);
+
   
   /* receives all CoAP messages */
   coap_init_engine();
-  printf("coap_init done\n");     
-
-
-  etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND); 
-  
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(PROCESS_EVENT_TIMER);
-    sprintf(buf,"%d",i);
-    i++;
-    toggle_observation();
-    etimer_reset(&periodic_timer);
+    etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND); 
+    PROCESS_WAIT_EVENT();
+    if (etimer_expired(&periodic_timer)){
+      PRINTF("timer expired");
+      sprintf(buf,"%d",i);
+      i++;
+      observe((char *)urls[3]);
+      etimer_reset(&periodic_timer);
+    }
   }
     
   PROCESS_END();
