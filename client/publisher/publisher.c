@@ -23,7 +23,7 @@ void
 json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 {
 	static uint16_t sample_n = 0;
-	snprintf(buf_out, buf_size, "{\"temp\" : %d, \"udm\" : \"°C\", sa_n\" : %u \" }",temp, sample_n);
+	snprintf(buf_out, buf_size, "{\"temp\":%d,\"udm\":\"°C\",sa_n\":%u\"}",temp, sample_n);
 	sample_n++;
 }
 
@@ -31,9 +31,7 @@ json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 void 
 json_accm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
-	static uint16_t sample_n = 0;
-	snprintf(buf_out, buf_size, "{\"x\" : %d, \"y\" : %d, \"z\" : %d, \"sa_n :\" %u }",x ,y, z, sample_n);
-	sample_n++;
+	snprintf(buf_out, buf_size, "{\"x\":%d,\"y\":%d,\"z\":%d}",x ,y, z);
 }
 
 void
