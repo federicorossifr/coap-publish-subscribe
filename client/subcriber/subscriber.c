@@ -5,7 +5,8 @@
 
 
 
-#define PERIOD 30
+#define WARMUP 30
+#define OBSERVE_TIME 200
 #define DIM 8
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 static coap_observee_t *obs = NULL;
@@ -74,7 +75,7 @@ static void notification_callback(coap_observee_t *obs, void *notification,coap_
     break;
   }
 }
-void observe(char * uri)
+coap_observee_t * observe(char * uri)
 {
   //if(obs) {
     //printf("Stopping observation\n");
@@ -82,8 +83,13 @@ void observe(char * uri)
     //obs = NULL;
   //} else {
     printf("Starting observation\n");
-    obs = coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
+    return coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
   //}
+}
+void remove_observe(coap_observee_t *o){
+  printf("Stopping observation\n");
+  coap_obs_remove_observee(o);
+  return;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -97,9 +103,14 @@ PROCESS_THREAD(subscriber, ev, data){
   
   /* receives all CoAP messages */
   coap_init_engine();
-  etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND); 
+  etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND); 
   PROCESS_WAIT_EVENT();
-  observe((char *)urls[4]);    
+  obs = observe((char *)urls[4]); 
+
+  etimer_set(&periodic_timer, OBSERVE_TIME*CLOCK_SECOND); 
+  PROCESS_WAIT_EVENT();
+  remove_observe(obs);
+  obs = NULL;
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

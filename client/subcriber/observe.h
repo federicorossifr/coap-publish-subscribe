@@ -29,7 +29,7 @@ get_token(void *packet, const uint8_t **token)
 
   return coap_pkt->token_len;
 }
-/*----------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
 static int
 set_token(void *packet, const uint8_t *token, size_t token_len)
 {
@@ -97,7 +97,7 @@ coap_get_obs_subject_by_token(const uint8_t *token, size_t token_len)
 
   return NULL;
 }
-/*----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 int
 coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
                                   uint8_t *token, size_t token_len)
@@ -118,7 +118,7 @@ coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
   }
   return removed;
 }
-/*----------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
 int
 coap_obs_remove_observee_by_url(uip_ipaddr_t *addr, uint16_t port,
                                 const char *url)
@@ -150,7 +150,7 @@ simple_reply(coap_message_type_t type, uip_ip6addr_t *addr, uint16_t port,
   len = coap_serialize_message(response, uip_appdata);
   coap_send_message(addr, port, uip_appdata, len);
 }
-/*----------------------------------------------------------------------------*/
+---------------------------------------------------------------------------*/
 static coap_notification_flag_t
 classify_notification(void *response, int first)
 {
@@ -209,8 +209,6 @@ coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
   }
   if(obs->notification_callback != NULL) {
     flag = classify_notification(notification, 0);
-    /* TODO: the following mechanism for discarding duplicates is too trivial 
-    /* refer to Observe RFC for a better solution 
     if(flag == NOTIFICATION_OK) {
       coap_get_header_observe(notification, &observe);
       if(observe == obs->last_observe) {
@@ -222,7 +220,7 @@ coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
     obs->notification_callback(obs, notification, flag);
   }
 }
-/*----------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
 static void
 handle_obs_registration_response(void *data, void *response)
 {
