@@ -97,18 +97,9 @@ PROCESS_THREAD(subscriber, ev, data){
   
   /* receives all CoAP messages */
   coap_init_engine();
-  while(1) {
-    etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND); 
-    PROCESS_WAIT_EVENT();
-    if (etimer_expired(&periodic_timer)){
-      PRINTF("timer expired");
-      sprintf(buf,"%d",i);
-      i++;
-      observe((char *)urls[4]);
-      etimer_reset(&periodic_timer);
-    }
-  }
-    
+  etimer_set(&periodic_timer, PERIOD*CLOCK_SECOND); 
+  PROCESS_WAIT_EVENT();
+  observe((char *)urls[4]);    
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
