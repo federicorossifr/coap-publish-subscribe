@@ -1,118 +1,46 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Beamer Presentation
-% LaTeX Template
-% Version 1.0 (10/11/12)
-%
-% This template has been downloaded from:
-% http://www.LaTeXTemplates.com
-%
-% License:
-% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%----------------------------------------------------------------------------------------
-%	PACKAGES AND THEMES
-%----------------------------------------------------------------------------------------
-
 \documentclass{beamer}
-
+\usepackage{listings}
+\usepackage{fancyvrb}
 \mode<presentation> {
-
-% The Beamer class comes with a number of default slide themes
-% which change the colors and layouts of slides. Below this is a list
-% of all the themes, uncomment each in turn to see what they look like.
-
-%\usetheme{default}
-%\usetheme{AnnArbor}
-%\usetheme{Antibes}
-%\usetheme{Bergen}
-%\usetheme{Berkeley}
-%\usetheme{Berlin}
-%\usetheme{Boadilla}
-%\usetheme{CambridgeUS}
-%\usetheme{Copenhagen}
-%\usetheme{Darmstadt}
-%\usetheme{Dresden}
-%\usetheme{Frankfurt}
-%\usetheme{Goettingen}
-%\usetheme{Hannover}
-%\usetheme{Ilmenau}
-%\usetheme{JuanLesPins}
-%\usetheme{Luebeck}
-%\usetheme{Madrid}
-%\usetheme{Malmoe}
-%\usetheme{Marburg}
-%\usetheme{Montpellier}
+\setbeamercovered{transparent}
 \usetheme{PaloAlto}
-%\usetheme{Pittsburgh}
-%\usetheme{Rochester}
-%\usetheme{Singapore}
-%\usetheme{Szeged}
-%\usetheme{Warsaw}
 
-% As well as themes, the Beamer class has a number of color themes
-% for any slide theme. Uncomment each of these in turn to see how it
-% changes the colors of your current slide theme.
-
-%\usecolortheme{albatross}
-%\usecolortheme{beaver}
-%\usecolortheme{beetle}
-%\usecolortheme{crane}
-%\usecolortheme{dolphin}
-%\usecolortheme{dove}
-%\usecolortheme{fly}
-%\usecolortheme{lily}
-%\usecolortheme{orchid}
-%\usecolortheme{rose}
-%\usecolortheme{seagull}
-%\usecolortheme{seahorse}
-%\usecolortheme{whale}
-%\usecolortheme{wolverine}
-
-%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
-%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
-
-%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
 }
 
-\usepackage{graphicx} % Allows including images
-\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{graphicx}
+\usepackage{booktabs} 
 
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
+\title[CoAP P/S]{Implementation of CoAP Publish/Subscribe using Python and Contiki-Os} 
 
-\title[CoAP P/S]{Implementation of CoAP Publish/Subscribe using Python and Contiki-Os} % The short title appears at the bottom of every slide, the full title is only on the title page
-
-\author[G. Carignani\\V. Consales\\F. Rossi]{Gioele Carignani, Vincenzo Consales, Federico Rossi} % Your name
-\institute[UNIPI] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+\author[G. Carignani\\V. Consales\\F. Rossi]{Gioele Carignani, Vincenzo Consales, Federico Rossi} 
+\institute[UNIPI] 
 {
-University of Pisa \\ % Your institution for the title page
+University of Pisa \\ 
 }
-\date{\today} % Date, can be changed to a custom date
+\date{\today}
 
 \begin{document}
 
 \begin{frame}
-\titlepage % Print the title page as the first slide
+\titlepage 
 \end{frame}
 
+\section{Overview}
 \begin{frame}
-\frametitle{Overview} % Table of contents slide, comment this block out to remove it
-\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+\frametitle{Overview}
+\tableofcontents 
 \end{frame}
 
 %----------------------------------------------------------------------------------------
 %	PRESENTATION SLIDES
 %----------------------------------------------------------------------------------------
 
-%------------------------------------------------
-\section{Introduction} % Sections can be created in order to organize your presentation into discrete blocks, all sections and subsections are automatically printed in the table of contents as an overview of the talk
-%------------------------------------------------
+\section{Introduction}
 
-\subsection{Abstract} % A subsection can be created just before a set of slides with a common theme to further break down your presentation into chunks
-
+\subsection{Abstract} 
 \begin{frame}
 \frametitle{Abstract}
 The work proposed is an extension of the CoAP protocol to enable publish-subscriber communication paradigm, employing a Broker node that enables store-and-forward messaging between constrained
@@ -120,12 +48,12 @@ nodes that can either publish or subscribe to particular objects.
 \end{frame}
 
 \subsection{Concepts}
-
 \begin{frame}
 \frametitle{Concepts}
 \begin{block}{Topic}
 A Topic is an item constrained nodes may subscribe or publish to. Its information is represented by its internal state.
 \end{block}
+\pause
 \begin{block}{Broker}
 A Broker node is a resource-rich component that maintains state of Topics and handles the publish/subscribe paradigm on the p/s nodes behalf.
 \end{block}
@@ -136,81 +64,114 @@ A Broker node is a resource-rich component that maintains state of Topics and ha
 \begin{block}{Publisher}
 A Publisher is a constrained node that can update the state of a Topic by issuing requests to Broker.
 \end{block}
-
+\pause
 \begin{block}{Subscriber}
 A Subscriber is a constrained node that attach itself to a Topic, listening for changes from the Broker.
 \end{block}
 \end{frame}
 
+\section{Implementation}
+
+\subsection{Broker}
+\begin{frame}
+\frametitle{Broker}
+Broker module is a Python server built over the \texttt{CoAPthon} library, by extending the base \texttt{CoAP} server class adding required functionalities.
+\end{frame}
+
+\subsubsection{PS Resource}
+\begin{frame}
+\frametitle{PS Resource}
+The PS APIs have been implemented by means of a \textit{CoAP Resource} that, according to the draft RFC \textit{draft-ietf-core-coap-pubsub-05}, is exposed with the \textit{Uri-Path} \texttt{/ps}.
+\pause
+The resource allows the four CoAP methods:
+\begin{itemize}
+	\item GET: implements the \texttt{READ} and, with CoAP \texttt{observe:0}, the \texttt{SUBSCRIBE} functionalities.\pause
+
+	\item POST: implements the \texttt{CREATE} functionality.\pause
+
+	\item PUT: implements the \texttt{PUBLISH} and \texttt{CREATE on PUBLISH} functionalities.\pause
+
+	\item DELETE: implements the \texttt{DELETE} functionality.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{PS Resource (cont.)}
+A modification to the original \texttt{CoAPthon} library is necessary to handle \texttt{CREATE on PUBLISH} behavior described in the draft RFC \textit{draft-ietf-core-coap-pubsub-05}: \pause
+\begin{itemize}
+	\item Need to intercept PUT request directed to a non-existent topic in order to create it and then answer to the request. \pause
+	\item Otherwise the default behavior would be a \texttt{4.04 Not Found} response.
+\end{itemize}
+\pause
+The other functionalities are already well implemented by the \texttt{CoAPthon} library so they can be used as they are.
+\end{frame}
+
+
+\subsubsection{Plus: Broker Docker container}
+\begin{frame}
+\frametitle{Plus: Broker Docker container}
+The Docker container has been defined in order to ease deployment of the Broker application and IPv6 configuration of the server machine.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plus: Broker Docker container (cont.)}
+\begin{exampleblock}{Dockerfile}
+	\begin{Verbatim}[fontsize=\footnotesize]
+FROM python:2.7
+ADD *.py /
+RUN git clone https://github.com/federicorossifr/CoAPthon.git
+RUN ls CoAPthon
+RUN cd CoAPthon && python setup.py sdist
+RUN pip install CoAPthon/dist/CoAPthon-4.0.2.tar.gz
+EXPOSE 5683
+CMD [ "python", "app.py" ]
+	\end{Verbatim}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plus: Broker Docker container (cont.)}
+\begin{exampleblock}{docker-compose.yaml}
+	\begin{Verbatim}[fontsize=\footnotesize]
+version: '2.1'
+services:
+  app:
+    build: .
+    ports:
+        - "5683:5683"
+    networks:
+      app_net:
+        ipv6_address: "2402:9400:1000:7::FFFF"
+networks:
+  app_net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "2402:9400:1000:7::/64"
+	\end{Verbatim}
+\end{exampleblock}
+\end{frame}
 %------------------------------------------------
 \section{Use-Case scenario}
 \begin{frame}
-\frametitle{Scenario} 
-Un po' di figa qua?
+\frametitle{Anti-intrusion system} 
+\begin{itemize}
+  \item Publisher node (Zolertia Z1)\pause
+  \begin{itemize}
+    \item Creates the topic \textit{/alarm} on the broker\pause
+    \item When activated (i.e. button pressed),starts sensing forces on the door using the accelerometer\pause
+    \item Publishes an alarm value on the topic when a certain force is detected\pause
+    \item Another button press disable the alarming functionality and reset the topic value (for DEMO purposes only. Typically a numeric code is required to disable it)
+  \end{itemize}\pause
+
+  \item Subscriber node (Zolertia Z1)\pause
+  \begin{itemize}
+    \item Subscribes to the \textit{/alarm} topic on the broker\pause
+    \item When it is notified about an alarm value it lights on its led (for demo purposes only. An enough powerful tweeter would be better to notify the intrusion)
+  \end{itemize}
+\end{itemize}
 \end{frame}
 
-%------------------------------------------------
-\section{Second Section}
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Table}
-\begin{table}
-\begin{tabular}{l l l}
-\toprule
-\textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
-\midrule
-Treatment 1 & 0.0003262 & 0.562 \\
-Treatment 2 & 0.0015681 & 0.910 \\
-Treatment 3 & 0.0009271 & 0.296 \\
-\bottomrule
-\end{tabular}
-\caption{Table caption}
-\end{table}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Theorem}
-\begin{theorem}[Mass--energy equivalence]
-$E = mc^2$
-\end{theorem}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
-\frametitle{Verbatim}
-\begin{example}[Theorem Slide Code]
-\begin{verbatim}
-\begin{frame}
-\frametitle{Theorem}
-\begin{theorem}[Mass--energy equivalence]
-$E = mc^2$
-\end{theorem}
-\end{frame}\end{verbatim}
-\end{example}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Figure}
-Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
-%\begin{figure}
-%\includegraphics[width=0.8\linewidth]{test}
-%\end{figure}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
-\frametitle{Citation}
-An example of the \verb|\cite| command to cite within the presentation:\\~
-
-This statement requires citation \cite{p1}.
-\end{frame}
 
 %------------------------------------------------
 
@@ -218,17 +179,27 @@ This statement requires citation \cite{p1}.
 \frametitle{References}
 \footnotesize{
 \begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
-\bibitem[Smith, 2012]{p1} John Smith (2012)
-\newblock Title of the publication
-\newblock \emph{Journal Name} 12(3), 45 -- 678.
+\bibitem[G. Tanganelli,C. Vallati, E. Mingozzi 2016]{p1}G. Tanganelli,C. Vallati,E. Mingozzi (2016)
+\newblock CoAPthon: Easy development of CoAP-based IoT applications with Python
+\newblock \emph{2015 IEEE 2nd World Forum on Internet of Things (WF-IoT)}
+\bibitem[M. Koster,A. Keranen,J. Jimenez 2018]{p1}G. M. Koster,A. Keranen,J. Jimenez (2018)
+\newblock Publish-Subscribe Broker for the Constrained Application Protocol (CoAP)
+
+\newblock \emph{draft-ietf-core-coap-pubsub-05}
 \end{thebibliography}
 }
 \end{frame}
+%------------------------------------------------
+
+\begin{frame}
+\Huge{\centerline{Demo Time!}}
+\end{frame}
+
 
 %------------------------------------------------
 
 \begin{frame}
-\Huge{\centerline{The End}}
+\Huge{\centerline{EOF}\centerline{Questions?}}
 \end{frame}
 
 %----------------------------------------------------------------------------------------
