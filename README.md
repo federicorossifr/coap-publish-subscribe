@@ -20,6 +20,12 @@ If not started, start the Docker daemon:
 sudo systemctl start docker
 ```
 
+Apply executable permissions to the binary:
+
+```console
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
 Run the container (execute command from inside the broker folder, where the docker-compose.yml file is)
 
 ```console 
