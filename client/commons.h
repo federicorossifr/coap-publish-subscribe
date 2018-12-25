@@ -2,7 +2,6 @@
 #define COAP_PUBSUB_h
 #include "contiki.h"
 #include "net/ip/uip.h"
-#include "net/ipv6/uip-ds6.h"
 #include "contiki-net.h"
 #include "er-coap-engine.h"
 #include <stdio.h>
@@ -32,10 +31,10 @@ const char *urls[] = {	".well-known/core",
 
 #define DIM_BUF_CREATE 64
 static char buf_create[DIM_BUF_CREATE]; 
-void create_topic(const uip_ipaddr_t *broker_addr, 
+void create_topic(uip_ipaddr_t *broker_addr, 
 				  const char *service_url, 
-				  const char *topic_name,
-				  const char *ct, 
+				  char *topic_name,
+				  char *ct, 
 				  coap_packet_t *request)
 {  
 	memset(buf_create,0,DIM_BUF_CREATE);
@@ -46,21 +45,20 @@ void create_topic(const uip_ipaddr_t *broker_addr,
 	coap_set_payload(request, (uint8_t *)buf_create, strlen(buf_create));
 }
 
-void update_topic(const uip_ipaddr_t *broker_addr, 
-				  char *service_url, 
+void update_topic(uip_ipaddr_t *broker_addr, 
+				  const char *service_url, 
 				  char *new_value, 
 				  uint8_t len)
 {
 	static coap_packet_t pkt[1];
-	static coap_transaction_t transaction[1];
-	static uint8_t pkt_serialized[127];
+	static uint8_t pkt_serialized[64];
 	static size_t size_pkt;
 	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, coap_get_mid());
 	coap_set_header_uri_path(pkt, service_url);
 	coap_set_payload(pkt, (uint8_t *)new_value, len);
 	size_pkt = coap_serialize_message(pkt, pkt_serialized);
 	coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
-	printf("update_topic. size_pkt:%d\n",size_pkt);
+	PRINTF("update_topic. size_pkt:%d\n",size_pkt);
 }
 
 

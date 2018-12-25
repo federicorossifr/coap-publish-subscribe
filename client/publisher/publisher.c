@@ -40,9 +40,9 @@ alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
 	memset(buf_out,0,buf_size);
 	if(y > FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
-		snprintf(buf_out, buf_size, "____ALARM",x ,y, z);
+		snprintf(buf_out, buf_size, "____ALARM");
 	else
-		snprintf(buf_out, buf_size, "____QUIET",x ,y, z);		
+		snprintf(buf_out, buf_size, "____QUIET");		
 	return strlen(buf_out)+1;
 }
 
@@ -72,18 +72,17 @@ PROCESS_THREAD(publisher, ev, data)
   	coap_init_engine();
 	printf("coap_init done\n");		  
 
-	create_topic(&broker_addr, urls[1], "sensors", "0", request);
+	create_topic(&broker_addr, urls[1], "sensors", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		
-	create_topic(&broker_addr, urls[2], "temperature", "0", request);
+	create_topic(&broker_addr, urls[2], "temperature", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
-	create_topic(&broker_addr, urls[2], "accelerometer", "0", request);
+	create_topic(&broker_addr, urls[2], "accelerometer", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
 	create_topic(&broker_addr, urls[2], "intrusion", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
-
 
 	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
 	etimer_set(&acc_timer, ACCM_READ_INTERVAL*CLOCK_SECOND);
