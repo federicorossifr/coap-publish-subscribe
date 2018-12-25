@@ -21,5 +21,4 @@ CFLAGS += -DUIP_CONF_TCP=0
 
 APPS += er-coap
 APPS += rest-engine
-
 include $(CONTIKI)/Makefile.include

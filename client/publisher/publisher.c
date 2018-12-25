@@ -7,17 +7,13 @@
 PROCESS(publisher, "publisher example process");
 AUTOSTART_PROCESSES(&publisher);
 /*---------------------------------------------------------------------------*/
-
-// 2402:9400:1000:7::ffff
+#define FORCE_THRESHOLD 150 //150 È SOLO UN ESEMPIO NON SO QUALE SIA LA FORZA
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(void *response)
 {
 	const uint8_t *chunk;
-
 	int len = coap_get_payload(response, &chunk);
-
-	printf("|%.*s\n", len, (char *)chunk);
 }
 
 uint8_t
@@ -39,26 +35,17 @@ json_accm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 	return strlen(buf_out)+1;
 }
 
-void
-print_int(uint16_t reg)
+uint8_t 
+alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
-	if(reg & ADXL345_INT_FREEFALL) {
-		printf("Freefall ");
-	}
-	if(reg & ADXL345_INT_INACTIVITY) {
-		printf("InActivity ");
-	}
-	if(reg & ADXL345_INT_ACTIVITY) {
-		printf("Activity ");
-	}
-	if(reg & ADXL345_INT_DOUBLETAP) {
-		printf("DoubleTap ");
-	}
-	if(reg & ADXL345_INT_TAP) {
-		printf("Tap ");
-	}
-	printf("\n");
+	memset(buf_out,0,buf_size);
+	if(y > FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
+		snprintf(buf_out, buf_size, "____ALARM",x ,y, z);
+	else
+		snprintf(buf_out, buf_size, "____QUIET",x ,y, z);		
+	return strlen(buf_out)+1;
 }
+
 
 #define ACCM_READ_INTERVAL   10
 #define TEMP_READ_INTERVAL	 20
@@ -75,9 +62,7 @@ PROCESS_THREAD(publisher, ev, data)
 	static struct etimer acc_timer;
 	static uip_ipaddr_t broker_addr;
 	coap_packet_t request[1];
-	//uip_ip6addr(&broker_addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0x0001); 
-	uip_ip6addr(&broker_addr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF);
-	
+	SERVER_NODE(broker_addr);
 	/* I activate sensor for temperature */
 	SENSORS_ACTIVATE(tmp102);
 	/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
@@ -96,6 +81,10 @@ PROCESS_THREAD(publisher, ev, data)
 	create_topic(&broker_addr, urls[2], "accelerometer", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
+	create_topic(&broker_addr, urls[2], "intrusion", "0", request);
+	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+
+
 	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
 	etimer_set(&acc_timer, ACCM_READ_INTERVAL*CLOCK_SECOND);
 
@@ -112,6 +101,8 @@ PROCESS_THREAD(publisher, ev, data)
 			z = adxl345.value(Z_AXIS);
 			size_msg = json_accm_msg(x, y, z, buf, DIM);
 			update_topic(&broker_addr, urls[4], buf, size_msg);
+			size_msg = alarm_msg(x,y,z,buf,DIM);
+			update_topic(&broker_addr,urls[5],buf,size_msg);
 			etimer_reset(&acc_timer);
 		}
 	}

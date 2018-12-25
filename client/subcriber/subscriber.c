@@ -1,14 +1,14 @@
+#define SUBSCRIBER
 #include "../commons.h"
+#include "leds.h"
+#include "dev/button-sensor.h"
 
-#define SERVER_NODE(ipaddr)    uip_ip6addr(ipaddr, 0x2402, 0x9400, 0x1000, 0x0007, 0, 0, 0, 0xFFFF); 
 
 
-
-#define WARMUP 60
-#define OBSERVE_TIME 200
+#define WARMUP 20
+#define OBSERVE_TIME 500
 #define DIM 8
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-static coap_observee_t *obsT = NULL;
 static coap_observee_t *obsA = NULL;
 
 static uip_ipaddr_t server_ipaddr[1]; /* holds the server ip address */
@@ -42,48 +42,33 @@ client_chunk_handler(void *response)
 }*/
 //////////////SUBSCRIBE////////////////////////////////////////
 //Handles the response to the observe request and the following notifications
+
+static void handleAlarmData(const uint8_t* data,int len) {
+  char buf[64];
+  int i = 0;
+  for(; i < len-4; ++i)buf[i] = (char)(data[i+4]);
+  if(strcmp(buf,"ALARM")==0)
+    leds_on(LEDS_ALL);
+  else
+    leds_off(LEDS_ALL);
+}
+
 static void notification_callback(coap_observee_t *obs, void *notification,coap_notification_flag_t flag){
-  printf("Notification handler\n");
   int len = 0;
-  const uint8_t *payload = NULL;
-  printf("Observe URI: %s\n", obs->url);
+  uint8_t *payload = NULL;
   if(notification) {
     len = coap_get_payload(notification, &payload);
-    printf("len %d\n",len);
-    printf("payload: %.*s\n",len, (char*)payload);
-  }
-  printf("%d\n",flag);
-  switch(flag) {
-  case NOTIFICATION_OK:
-    printf("NOTIFICATION OK: %*s\n", len, (char *)payload);
-    break;
-  case OBSERVE_OK: /* server accepeted observation request */
-    printf("OBSERVE_OK: %*s\n", len, (char *)payload);
-    break;
-  case OBSERVE_NOT_SUPPORTED:
-    printf("OBSERVE_NOT_SUPPORTED: %*s\n", len, (char *)payload);
-    obs = NULL;
-    break;
-  case ERROR_RESPONSE_CODE:
-    printf("ERROR_RESPONSE_CODE: %*s\n", len, (char *)payload);
-    obs = NULL;
-    break;
-  case NO_REPLY_FROM_SERVER:
-    printf("NO_REPLY_FROM_SERVER: "
-           "removing observe registration with token %x%x\n",
-           obs->token[0], obs->token[1]);
-    obs = NULL;
-    break;
+    if(len > 0) {
+        handleAlarmData(payload,len);
+    }
   }
 }
 //observe the resource specified by the string uri
 coap_observee_t * observe(char * uri){
-  printf("Starting observation\n");
   return coap_obs_request_registration(server_ipaddr, REMOTE_PORT,uri, notification_callback, NULL);
 }
 //unsubscribe from the specific observe resource
 void remove_observe(coap_observee_t *o){
-  printf("Stopping observation\n");
   coap_obs_remove_observee(o);
   return;
 }
@@ -94,22 +79,26 @@ PROCESS_THREAD(subscriber, ev, data){
   static uint16_t i = -1;
   static char buf[DIM];
   static struct etimer periodic_timer;
-  SERVER_NODE(server_ipaddr);
-
-  
-  /* receives all CoAP messages */
+  static int observing = 0;
+  SENSORS_ACTIVATE(button_sensor);
   coap_init_engine();
-  //wait for the subscriber to load
-  etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND); 
-  PROCESS_WAIT_EVENT();
-  obsA = observe((char *)urls[4]); 
-  obsT = observe((char *)urls[3]); 
-  //after a certain period unsubscribe from observing
-  etimer_set(&periodic_timer, OBSERVE_TIME*CLOCK_SECOND); 
-  PROCESS_WAIT_EVENT();
-  remove_observe(obsA);
-  remove_observe(obsT);
-  obsA = obsT = NULL;
+  while(1) {
+    PROCESS_WAIT_EVENT();
+    if(ev == sensors_event && data == &button_sensor) {
+      if(observing) {
+        printf("Alarm disabled\n");
+        leds_off(LEDS_ALL);
+        coap_obs_remove_observee(obsA);
+        obsA = NULL;
+        observing = 0;
+      } else {
+        printf("Alarm enabled\n");
+        leds_off(LEDS_ALL);
+        obsA = observe((char *)urls[5]);               
+        observing = 1;
+      }
+    }
+  }
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

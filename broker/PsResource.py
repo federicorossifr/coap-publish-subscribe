@@ -30,7 +30,9 @@ class PsResource(Resource):
         self.payload = ""
         self.children = []
 
-    def render_GET_advanced(self, request, response):            
+    def render_GET_advanced(self, request, response): 
+        print(self.content_type);
+        sys.stdout.flush();           
         response.payload = self.payload
         response.code = defines.Codes.CONTENT.number
         if(request.observe == 0):
