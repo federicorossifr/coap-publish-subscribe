@@ -65,19 +65,6 @@ PROCESS(print_children_process,"print children");
 
 AUTOSTART_PROCESSES(&print_children_process, &border_router_process);
 
-#if BUF_USES_STACK
-static char *bufptr, *bufend;
-#define ADD(...) do {                                                   \
-    bufptr += snprintf(bufptr, bufend - bufptr, __VA_ARGS__);      \
-  } while(0)
-#else
-static char buf[256];
-static int blen;
-#define ADD(...) do {                                                   \
-    blen += snprintf(&buf[blen], sizeof(buf) - blen, __VA_ARGS__);      \
-  } while(0)
-#endif
-
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
