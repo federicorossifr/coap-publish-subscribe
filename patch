@@ -1,0 +1,28 @@
+diff --git a/apps/er-coap/er-coap-observe-client.c b/apps/er-coap/er-coap-observe-client.c
+index 2186320..04e03e8 100644
+--- a/apps/er-coap/er-coap-observe-client.c
++++ b/apps/er-coap/er-coap-observe-client.c
+@@ -46,7 +46,7 @@
+ /* Compile this code only if client-side support for CoAP Observe is required */
+ #if COAP_OBSERVE_CLIENT
+ 
+-#define DEBUG 1
++#define DEBUG 0
+ #if DEBUG
+ #define PRINTF(...) printf(__VA_ARGS__)
+ #define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:" \
+@@ -316,7 +316,7 @@ coap_obs_request_registration(uip_ipaddr_t *addr, uint16_t port, char *uri,
+   coap_observee_t *obs;
+ 
+   obs = NULL;
+-  coap_init_message(request, COAP_TYPE_CON, COAP_GET, coap_get_mid());
++  coap_init_message(request, COAP_TYPE_NON, COAP_GET, coap_get_mid());
+   coap_set_header_uri_path(request, uri);
+   coap_set_header_observe(request, 0);
+   token_len = coap_generate_token(&token);
+diff --git a/tools/mspsim b/tools/mspsim
+--- a/tools/mspsim
++++ b/tools/mspsim
+@@ -1 +1 @@
+-Subproject commit 47ae45cb0f36337115e32adb2a5ba0bf6e1e4437
++Subproject commit 47ae45cb0f36337115e32adb2a5ba0bf6e1e4437-dirty
