@@ -40,3 +40,9 @@ If either Broker app or CoAPthon source have been modified, re-build the contain
 ```sh 
 sudo docker-compose build --no-cache
 ```
+# MODIFY CONTIKI LIBS
+
+To save space for devices ROM and workaround a bug in CON messages in response to observe update
+```sh 
+git apply patch
+```
