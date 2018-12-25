@@ -82,6 +82,7 @@ PROCESS_THREAD(subscriber, ev, data){
   static int observing = 0;
   SENSORS_ACTIVATE(button_sensor);
   coap_init_engine();
+  SERVER_NODE(server_ipaddr);
   while(1) {
     PROCESS_WAIT_EVENT();
     if(ev == sensors_event && data == &button_sensor) {

@@ -42,7 +42,7 @@ alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 	if(y > FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
 		snprintf(buf_out, buf_size, "____ALARM");
 	else
-		snprintf(buf_out, buf_size, "____QUIET");		
+		snprintf(buf_out, buf_size, "____ALARM");		
 	return strlen(buf_out)+1;
 }
 
@@ -62,7 +62,7 @@ PROCESS_THREAD(publisher, ev, data)
 	static struct etimer acc_timer;
 	static uip_ipaddr_t broker_addr;
 	coap_packet_t request[1];
-	SERVER_NODE(broker_addr);
+	SERVER_NODE(&broker_addr);
 	/* I activate sensor for temperature */
 	SENSORS_ACTIVATE(tmp102);
 	/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
