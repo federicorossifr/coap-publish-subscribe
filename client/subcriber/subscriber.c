@@ -44,10 +44,8 @@ client_chunk_handler(void *response)
 //Handles the response to the observe request and the following notifications
 
 static void handleAlarmData(const uint8_t* data,int len) {
-  char buf[64];
   int i = 0;
-  for(; i < len-4; ++i)buf[i] = (char)(data[i+4]);
-  if(strcmp(buf,"ALARM")==0)
+  if(strcmp((char*)data,"ALARM")==0)
     leds_on(LEDS_ALL);
   else
     leds_off(LEDS_ALL);
@@ -55,6 +53,7 @@ static void handleAlarmData(const uint8_t* data,int len) {
 
 static void notification_callback(coap_observee_t *obs, void *notification,coap_notification_flag_t flag){
   int len = 0;
+  int i = 0;
   uint8_t *payload = NULL;
   if(notification) {
     len = coap_get_payload(notification, &payload);

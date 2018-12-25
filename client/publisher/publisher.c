@@ -40,9 +40,9 @@ alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
 	memset(buf_out,0,buf_size);
 	if(y > FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
-		snprintf(buf_out, buf_size, "____ALARM");
+		snprintf(buf_out, buf_size, "ALARM");
 	else
-		snprintf(buf_out, buf_size, "____ALARM");		
+		snprintf(buf_out, buf_size, "ALARM");		
 	return strlen(buf_out)+1;
 }
 
