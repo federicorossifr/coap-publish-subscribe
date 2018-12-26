@@ -56,7 +56,7 @@ PROCESS_THREAD(publisher, ev, data)
 {
 	PROCESS_BEGIN();	
 #define DIM 32
-	int alarm_on;
+	static int alarm_on = 0;
 	static char buf[DIM];
 	uint8_t size_msg = 0;
 	int16_t temp;
@@ -79,8 +79,8 @@ PROCESS_THREAD(publisher, ev, data)
 	create_topic(&broker_addr, urls[0], "sensors", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		
-	create_topic(&broker_addr, urls[1], "temperature", "50", request);
-	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+	//create_topic(&broker_addr, urls[1], "temperature", "50", request);
+	//COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
 	create_topic(&broker_addr, urls[1], "accelerometer", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
@@ -94,11 +94,13 @@ PROCESS_THREAD(publisher, ev, data)
 	while(1) {
 		PROCESS_WAIT_EVENT();
 		if(ev == sensors_event && data == &button_sensor) {
-			if(alarm_on) {
-			    printf("Alarm disabled\n");
+			if(alarm_on==1) {
+			   // printf("Alarm disabled\n");
+				size_msg = alarm_msg(0,FORCE_THRESHOLD,0,buf,DIM);//impose QUIET message
+				update_topic(&broker_addr,urls[4],buf,size_msg);			   	
 			    alarm_on = 0;
 		    } else {
-			    printf("Alarm enabled\n");          
+			   	//printf("Alarm enabled\n");          
 			    alarm_on = 1;
 		    }
 		}
