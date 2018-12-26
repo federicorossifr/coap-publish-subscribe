@@ -20,7 +20,3 @@ index 2186320..04e03e8 100644
    coap_set_header_uri_path(request, uri);
    coap_set_header_observe(request, 0);
    token_len = coap_generate_token(&token);
-diff --git a/tools/mspsim b/tools/mspsim
---- a/tools/mspsim
-+++ b/tools/mspsim
-@@ -1 +1 @@
