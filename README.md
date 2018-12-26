@@ -30,7 +30,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 Run the container (execute command from inside the broker folder, where the docker-compose.yml file is)
 
 ```sh 
-sudo docker-compose up
+user ~/coap-publish-subscribe/broker $ sudo docker-compose up
 ```
 
 The broker server will run at the address specified inside the docker-compose.yml at port 5683
@@ -38,7 +38,7 @@ The broker server will run at the address specified inside the docker-compose.ym
 If either Broker app or CoAPthon source have been modified, re-build the container image before running it:
 
 ```sh 
-sudo docker-compose build --no-cache
+user ~/coap-publish-subscribe/broker $ sudo docker-compose build --no-cache
 ```
 # PATCH CONTIKI OBSERVE LIBRARY
 
