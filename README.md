@@ -40,9 +40,9 @@ If either Broker app or CoAPthon source have been modified, re-build the contain
 ```sh 
 sudo docker-compose build --no-cache
 ```
-# MODIFY CONTIKI LIBS
+# PATCH CONTIKI OBSERVE LIBRARY
 
-To save space for devices ROM and workaround a bug in CON messages in response to observe update
+Before compiling the sources you need to patch the Contiki firmware in order to solve an issue related to NOTIFY payload with CON messages and to remove forced debug prints that do not fit the Z1 ROM.
 ```sh 
-git apply patch
+user ~/contiki $ git apply patch
 ```
