@@ -76,15 +76,23 @@ PROCESS_THREAD(publisher, ev, data)
 
 	create_topic(&broker_addr, urls[0], "sensors", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+
 		
+
+	#if TEMP_TOPIC
 	create_topic(&broker_addr, urls[1], "temperature", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+	#endif
 
+	#if ACC_TOPIC
 	create_topic(&broker_addr, urls[1], "accelerometer", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+	#endif
 
+	#if ALARM_TOPIC
 	create_topic(&broker_addr, urls[1], "intrusion", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
+	#endif
 
 	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
 	etimer_set(&acc_timer, ACCM_READ_INTERVAL*CLOCK_SECOND);
