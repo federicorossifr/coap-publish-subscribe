@@ -55,9 +55,7 @@ alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 PROCESS_THREAD(publisher, ev, data)
 {
 	PROCESS_BEGIN();	
-#define DIM 32
 	static int alarm_on = 0;
-	static char buf[DIM];
 	uint8_t size_msg = 0;
 	int16_t temp;
 	int16_t x, y, z;
@@ -95,28 +93,28 @@ PROCESS_THREAD(publisher, ev, data)
 		PROCESS_WAIT_EVENT();
 		if(ev == sensors_event && data == &button_sensor) {
 			if(alarm_on==1) {
-			   // printf("Alarm disabled\n");
-				size_msg = alarm_msg(0,FORCE_THRESHOLD,0,buf,DIM);//impose QUIET message
+			    printf("A0\n");
+				size_msg = alarm_msg(0,FORCE_THRESHOLD,0,buf,DIM_BUF);//impose QUIET message
 				update_topic(&broker_addr,urls[4],buf,size_msg);			   	
 			    alarm_on = 0;
 		    } else {
-			   	//printf("Alarm enabled\n");          
+			   	printf("A1\n");          
 			    alarm_on = 1;
 		    }
 		}
 		if( etimer_expired(&temp_timer) ) {
 			temp = tmp102_read_temp_x100();
-			size_msg = json_temp_msg(temp, buf, DIM);
+			size_msg = json_temp_msg(temp, buf, DIM_BUF);
 			update_topic(&broker_addr, urls[3], buf, size_msg);
 			etimer_reset(&temp_timer);
 		} else if ( etimer_expired(&acc_timer) ) {
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
-			size_msg = json_accm_msg(x, y, z, buf, DIM);
+			size_msg = json_accm_msg(x, y, z, buf, DIM_BUF);
 			update_topic(&broker_addr, urls[3], buf, size_msg);
 			if(alarm_on){
-				size_msg = alarm_msg(x,y,z,buf,DIM);
+				size_msg = alarm_msg(x,y,z,buf,DIM_BUF);
 				update_topic(&broker_addr,urls[4],buf,size_msg);
 			}
 			etimer_reset(&acc_timer);

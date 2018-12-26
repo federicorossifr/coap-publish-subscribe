@@ -66,6 +66,6 @@
 
 // Set a less busy channel
 #undef CC2420_CONF_CHANNEL 
-#define CC2420_CONF_CHANNEL 26
+#define CC2420_CONF_CHANNEL 21
 
 #endif /* PROJECT_ROUTER_CONF_H_ */

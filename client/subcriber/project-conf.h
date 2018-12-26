@@ -6,7 +6,7 @@
 #define UIP_CONF_IPV6_RPL 1
 
 #undef CC2420_CONF_CHANNEL 
-#define CC2420_CONF_CHANNEL 26
+#define CC2420_CONF_CHANNEL 21
 #undef DEBUG
 #define DEBUG 0
 #define PUBLISHER 0
