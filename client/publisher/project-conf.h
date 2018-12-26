@@ -53,4 +53,7 @@
 #define UIP_CONF_MAX_ROUTES   10
 #undef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE    280
+
+#undef DEBUG
+#define DEBUG 0
 #endif /* PROJECT_ERBIUM_CONF_H_ */

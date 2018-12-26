@@ -21,8 +21,7 @@
 #endif
 
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-const char *urls[] = {	".well-known/core", 
-					  	"ps", 
+const char *urls[] = { 	"ps", 
 					  	"ps/sensors"
 ,					  	"ps/sensors/temperature",
 					 	"ps/sensors/accelerometer",

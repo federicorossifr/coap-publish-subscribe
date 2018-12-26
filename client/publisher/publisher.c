@@ -3,11 +3,12 @@
 #include "dev/tmp102.h"
 #include "dev/adxl345.h"
 
+
 /*---------------------------------------------------------------------------*/
-PROCESS(publisher, "publisher example process");
+PROCESS(publisher, "publisher");
 AUTOSTART_PROCESSES(&publisher);
 /*---------------------------------------------------------------------------*/
-#define FORCE_THRESHOLD 150 //150 È SOLO UN ESEMPIO NON SO QUALE SIA LA FORZA
+#define FORCE_THRESHOLD 20 //150 È SOLO UN ESEMPIO NON SO QUALE SIA LA FORZA
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(void *response)
@@ -21,7 +22,7 @@ json_temp_msg(int16_t temp, char *buf_out, uint8_t buf_size)
 {
 	static uint16_t sample_n = 0;
 	memset(buf_out,0,buf_size);
-	snprintf(buf_out, buf_size, "{\"temp\":%d,\"udm\":\"°C\",sa_n\":%u\"}",temp, sample_n);
+	snprintf(buf_out, buf_size, "{temp:%d,udm:C,sa_n:%u}",temp, sample_n);
 	sample_n++;
 	return strlen(buf_out)+1;
 }
@@ -31,7 +32,7 @@ uint8_t
 json_accm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
 	memset(buf_out,0,buf_size);
-	snprintf(buf_out, buf_size, "{\"x\":%d,\"y\":%d,\"z\":%d}",x ,y, z);
+	snprintf(buf_out, buf_size, "{x:%d,y:%d,z:%d}",x ,y, z);
 	return strlen(buf_out)+1;
 }
 
@@ -39,21 +40,21 @@ uint8_t
 alarm_msg(int16_t x, int16_t y, int16_t z, char *buf_out, uint8_t buf_size)
 {
 	memset(buf_out,0,buf_size);
-	if(y > FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
+	if(y>FORCE_THRESHOLD || y<-FORCE_THRESHOLD) // Y È SOLO UN ESEMPIO, NON SO QUALE SIA L'ASSE
 		snprintf(buf_out, buf_size, "ALARM");
 	else
-		snprintf(buf_out, buf_size, "ALARM");		
+		snprintf(buf_out, buf_size, "QUIET");		
 	return strlen(buf_out)+1;
 }
 
 
-#define ACCM_READ_INTERVAL   10
+#define ACCM_READ_INTERVAL   2
 #define TEMP_READ_INTERVAL	 20
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(publisher, ev, data)
 {
 	PROCESS_BEGIN();	
-#define DIM 48
+#define DIM 32
 	static char buf[DIM];
 	uint8_t size_msg = 0;
 	int16_t temp;
@@ -70,18 +71,18 @@ PROCESS_THREAD(publisher, ev, data)
 
 	/* receives all CoAP messages */
   	coap_init_engine();
-	printf("coap_init done\n");		  
+	PRINTF("coap_init done\n");		  
 
-	create_topic(&broker_addr, urls[1], "sensors", "50", request);
+	create_topic(&broker_addr, urls[0], "sensors", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 		
-	create_topic(&broker_addr, urls[2], "temperature", "50", request);
+	create_topic(&broker_addr, urls[1], "temperature", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
-	create_topic(&broker_addr, urls[2], "accelerometer", "50", request);
+	create_topic(&broker_addr, urls[1], "accelerometer", "50", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
-	create_topic(&broker_addr, urls[2], "intrusion", "0", request);
+	create_topic(&broker_addr, urls[1], "intrusion", "0", request);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 
 	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
@@ -99,9 +100,9 @@ PROCESS_THREAD(publisher, ev, data)
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
 			size_msg = json_accm_msg(x, y, z, buf, DIM);
-			update_topic(&broker_addr, urls[4], buf, size_msg);
+			update_topic(&broker_addr, urls[3], buf, size_msg);
 			size_msg = alarm_msg(x,y,z,buf,DIM);
-			update_topic(&broker_addr,urls[5],buf,size_msg);
+			update_topic(&broker_addr,urls[4],buf,size_msg);
 			etimer_reset(&acc_timer);
 		}
 	}

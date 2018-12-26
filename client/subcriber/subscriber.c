@@ -94,7 +94,7 @@ PROCESS_THREAD(subscriber, ev, data){
       } else {
         printf("Alarm enabled\n");
         leds_off(LEDS_ALL);
-        obsA = observe((char *)urls[5]);               
+        obsA = observe((char *)urls[4]);               
         observing = 1;
       }
     }
