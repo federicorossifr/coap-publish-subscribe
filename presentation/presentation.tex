@@ -155,7 +155,21 @@ networks:
 \subsection{Pub/Sub nodes}
 \frametitle{Publisher/Subscriber nodes}
 \begin{frame}
-	Publisher and subscriber nodes are implemented using the \texttt{Contiki} platform and the \texttt{Erbium} CoAP framework
+	Publisher and subscriber nodes are implemented using the \texttt{Contiki} platform and the \texttt{Erbium} CoAP framework.
+\end{frame}
+\frametitle{Publisher/Subscriber nodes (cont.)}
+\begin{frame}
+	Publisher:
+	\begin{itemize}
+		\item Creates topics by sending \texttt{COAP CON} messages to \texttt{/ps} endpoint with method \texttt{POST}\pause
+		\item Updates topics by sending \texttt{COAP NON} messages to \texttt{/ps/[topic]} endpoint with method \texttt{PUT}\pause
+	\end{itemize}
+	Subscriber:
+	\begin{itemize}
+		\item Subscribes to topics by sending \texttt{COAP NON}\footnotemark messages with \texttt{Observe:0} to \texttt{/ps/[topic]} endpoint with method \texttt{GET}.
+	\end{itemize}\pause
+	Issues resolved in Contiki are provided with a patch file toghether with the project source code.
+	\footnotetext[1]{https://github.com/contiki-os/contiki/issues/1985\\}
 \end{frame}
 
 %------------------------------------------------
@@ -178,8 +192,6 @@ networks:
   \end{itemize}
 \end{itemize}
 \end{frame}
-
-
 %------------------------------------------------
 \section{References}
 \begin{frame}
