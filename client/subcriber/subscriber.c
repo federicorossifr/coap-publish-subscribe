@@ -44,7 +44,7 @@ client_chunk_handler(void *response)
 //Handles the response to the observe request and the following notifications
 
 static void handleAlarmData(const uint8_t* data,int len) {
-  int i = 0;
+  printf("alarm: %s\n",(char*)data);
   if(strcmp((char*)data,"ALARM")==0)
     leds_on(LEDS_ALL);
   else
@@ -75,29 +75,18 @@ void remove_observe(coap_observee_t *o){
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(subscriber, ev, data){
   PROCESS_BEGIN();  
-  static uint16_t i = -1;
-  static char buf[DIM];
   static struct etimer periodic_timer;
-  static int observing = 0;
-  SENSORS_ACTIVATE(button_sensor);
+    SENSORS_ACTIVATE(button_sensor);
   coap_init_engine();
   SERVER_NODE(server_ipaddr);
+  etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND);
   while(1) {
     PROCESS_WAIT_EVENT();
-    if(ev == sensors_event && data == &button_sensor) {
-      if(observing) {
-        printf("Alarm disabled\n");
-        leds_off(LEDS_ALL);
-        coap_obs_remove_observee(obsA);
-        obsA = NULL;
-        observing = 0;
-      } else {
-        printf("Alarm enabled\n");
-        leds_off(LEDS_ALL);
-        obsA = observe((char *)urls[4]);               
-        observing = 1;
-      }
+    if( etimer_expired(&periodic_timer)) {
+      printf("observing\n");
+      obsA = observe((char*)urls[4]);
     }
+
   }
   PROCESS_END();
 }

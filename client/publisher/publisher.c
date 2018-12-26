@@ -2,6 +2,7 @@
 #include "dev/i2cmaster.h"
 #include "dev/tmp102.h"
 #include "dev/adxl345.h"
+#include "dev/button-sensor.h"
 
 
 /*---------------------------------------------------------------------------*/
@@ -55,6 +56,7 @@ PROCESS_THREAD(publisher, ev, data)
 {
 	PROCESS_BEGIN();	
 #define DIM 32
+	int alarm_on;
 	static char buf[DIM];
 	uint8_t size_msg = 0;
 	int16_t temp;
@@ -68,6 +70,7 @@ PROCESS_THREAD(publisher, ev, data)
 	SENSORS_ACTIVATE(tmp102);
 	/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
   	SENSORS_ACTIVATE(adxl345);
+  	SENSORS_ACTIVATE(button_sensor);
 
 	/* receives all CoAP messages */
   	coap_init_engine();
@@ -90,6 +93,15 @@ PROCESS_THREAD(publisher, ev, data)
 
 	while(1) {
 		PROCESS_WAIT_EVENT();
+		if(ev == sensors_event && data == &button_sensor) {
+			if(alarm_on) {
+			    printf("Alarm disabled\n");
+			    alarm_on = 0;
+		    } else {
+			    printf("Alarm enabled\n");          
+			    alarm_on = 1;
+		    }
+		}
 		if( etimer_expired(&temp_timer) ) {
 			temp = tmp102_read_temp_x100();
 			size_msg = json_temp_msg(temp, buf, DIM);
@@ -101,8 +113,10 @@ PROCESS_THREAD(publisher, ev, data)
 			z = adxl345.value(Z_AXIS);
 			size_msg = json_accm_msg(x, y, z, buf, DIM);
 			update_topic(&broker_addr, urls[3], buf, size_msg);
-			size_msg = alarm_msg(x,y,z,buf,DIM);
-			update_topic(&broker_addr,urls[4],buf,size_msg);
+			if(alarm_on){
+				size_msg = alarm_msg(x,y,z,buf,DIM);
+				update_topic(&broker_addr,urls[4],buf,size_msg);
+			}
 			etimer_reset(&acc_timer);
 		}
 	}
