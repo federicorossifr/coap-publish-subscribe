@@ -1,7 +1,6 @@
 #define SUBSCRIBER
 #include "../commons.h"
 #include "leds.h"
-#include "dev/button-sensor.h"
 
 
 
@@ -17,29 +16,7 @@ static uip_ipaddr_t server_ipaddr[1]; /* holds the server ip address */
 /*---------------------------------------------------------------------------*/
 PROCESS(subscriber, "subscriber example process");
 AUTOSTART_PROCESSES(&subscriber);
-/*---------------------------------------------------------------------------
-/////////////DISCOVERY/////////////////////7/7777
-static char buf_create[64]; 
-void get_topic(const uip_ipaddr_t *broker_addr,const char *service_url,coap_packet_t *request){  
-  memset(buf_create,0,64);
-  coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-  coap_set_header_uri_path(request, service_url);
-
-  //GET /ps/sensors/accelerometer?ct=0
-  mystrcat(buf_create, "?ct=0");
-  printf("printing message: %s\n",buf_create ); 
-  printf("get topic msg=%s l=%d\n",buf_create,strlen(buf_create));
-  coap_set_payload(request, (uint8_t *)buf_create, strlen(buf_create));
-}
-void
-client_chunk_handler(void *response)
-{
-  const uint8_t *chunk;
-
-  int len = coap_get_payload(response, &chunk);
-
-  printf("|%.*s\n", len, (char *)chunk);
-}*/
+/*---------------------------------------------------------------------------*/
 //////////////SUBSCRIBE////////////////////////////////////////
 //Handles the response to the observe request and the following notifications
 
@@ -76,7 +53,6 @@ void remove_observe(coap_observee_t *o){
 PROCESS_THREAD(subscriber, ev, data){
   PROCESS_BEGIN();  
   static struct etimer periodic_timer;
-    SENSORS_ACTIVATE(button_sensor);
   coap_init_engine();
   SERVER_NODE(server_ipaddr);
   etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND);
