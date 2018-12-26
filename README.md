@@ -8,7 +8,7 @@ https://tools.ietf.org/pdf/draft-ietf-core-coap-pubsub-05.pdf
 [Federico Rossi](https://github.com/federicorossifr)<br>
 
 
-# RUN THE BROKER INSIDE A CONTAINER
+# Run the broker inside a container
 Install Docker from the official website [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#os-requirements)<br>
 If it is the first time, install docker-compose:
 ```sh 
@@ -40,7 +40,7 @@ If either Broker app or CoAPthon source have been modified, re-build the contain
 ```sh 
 user ~/coap-publish-subscribe/broker $ sudo docker-compose build --no-cache
 ```
-# PATCH CONTIKI OBSERVE LIBRARY
+# Patch Contiki observe library
 
 Before compiling the sources you need to patch the Contiki firmware in order to solve an issue related to NOTIFY payload with CON messages and to remove forced debug prints that do not fit the Z1 ROM.
 ```sh 
