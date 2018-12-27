@@ -16,8 +16,6 @@ client_chunk_handler(void *response)
 {
 	const uint8_t *chunk;
 	int len = coap_get_payload(response, &chunk);
-	
-	printf(".\n");
 }
 
 uint8_t
@@ -102,7 +100,6 @@ PROCESS_THREAD(publisher, ev, data)
 	while(1) {
 		PROCESS_WAIT_EVENT();
 		if(ev == sensors_event && data == &button_sensor) {
-			printf("..\n");
 			if(alarm_on==1) {
 			    printf("A0\n");
 				size_msg = alarm_msg(0,0,0,buf,DIM_BUF);//impose QUIET message
@@ -126,7 +123,6 @@ PROCESS_THREAD(publisher, ev, data)
 
 		#if ALARM_TOPIC
 		if ( etimer_expired(&acc_timer) ) {
-			printf("-\n");
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
