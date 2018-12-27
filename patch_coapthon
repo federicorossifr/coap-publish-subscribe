@@ -1,64 +1,64 @@
 diff --git a/coapthon/layers/requestlayer.py b/coapthon/layers/requestlayer.py
-index 090554b..0286b4c 100644
+index 0286b4c..090554b 100644
 --- a/coapthon/layers/requestlayer.py
 +++ b/coapthon/layers/requestlayer.py
-@@ -88,24 +88,8 @@ class RequestLayer(object):
+@@ -88,8 +88,24 @@ class RequestLayer(object):
              resource = self._server.root[path]
          except KeyError:
              resource = None
--        if resource is None and not path.startswith("/ps"):
-+        if resource is None:
+-        if resource is None:
++        if resource is None and not path.startswith("/ps"):
              transaction.response.code = defines.Codes.NOT_FOUND.number
--        elif resource is None and path.startswith("/ps"):
--            #transaction = self._server.resourceLayer.create_resource(path, transaction)
--            path_el = path.split("/");
--            create_item = path_el[-1]
--            del path_el[-1];
--            new_path = '/'.join(path_el);
--            parent_resource = self._server.root[new_path]
--            print("[BROKER] Creating topic "+path+" on PUT request")
--            payload = "<"+create_item+">;ct=0;";
--            resource = parent_resource.createResFromPayload(payload,new_path)
--            parent_resource.children.append(resource)
--            parent_resource.cs.add_resource(resource.name,resource)
--            print("[BROKER] Created")
--            transaction.response.code = defines.Codes.CREATED.number
--            transaction.resource = resource
--            transaction = self._server.resourceLayer.update_resource(transaction)
++        elif resource is None and path.startswith("/ps"):
++            #transaction = self._server.resourceLayer.create_resource(path, transaction)
++            path_el = path.split("/");
++            create_item = path_el[-1]
++            del path_el[-1];
++            new_path = '/'.join(path_el);
++            parent_resource = self._server.root[new_path]
++            print("[BROKER] Creating topic "+path+" on PUT request")
++            payload = "<"+create_item+">;ct=0;";
++            resource = parent_resource.createResFromPayload(payload,new_path)
++            parent_resource.children.append(resource)
++            parent_resource.cs.add_resource(resource.name,resource)
++            print("[BROKER] Created")
++            transaction.response.code = defines.Codes.CREATED.number
++            transaction.resource = resource
++            transaction = self._server.resourceLayer.update_resource(transaction)
          else:
              transaction.resource = resource
              # Update request
 diff --git a/coapthon/serializer.py b/coapthon/serializer.py
-index 2569421..1c094ce 100644
+index 1c094ce..2569421 100644
 --- a/coapthon/serializer.py
 +++ b/coapthon/serializer.py
-@@ -145,7 +145,6 @@ class Serializer(object):
+@@ -145,6 +145,7 @@ class Serializer(object):
          tmp |= message.type
          tmp <<= 4
          tmp |= tkl
--        print(message.mid)
++        print(message.mid)
          values = [tmp, message.code, message.mid]
  
          if message.token is not None and tkl > 0:
-@@ -227,7 +226,6 @@ class Serializer(object):
+@@ -226,6 +227,7 @@ class Serializer(object):
          try:
              s = struct.Struct(fmt)
              datagram = ctypes.create_string_buffer(s.size)
--            print(values)
++            print(values)
              s.pack_into(datagram, 0, *values)
          except struct.error:
              # The .exception method will report on the exception encountered
 diff --git a/coapthon/server/coap.py b/coapthon/server/coap.py
-index 1d4367c..c4db32f 100644
+index c4db32f..1d4367c 100644
 --- a/coapthon/server/coap.py
 +++ b/coapthon/server/coap.py
-@@ -255,9 +255,6 @@ class CoAP(object):
+@@ -255,6 +255,9 @@ class CoAP(object):
              host, port = message.destination
              logger.debug("send_datagram - " + str(message))
              serializer = Serializer()
--            if(message.mid is None):
--                print("Message mid was none, I must do something my friend")
--                message.mid = self._messageLayer.fetch_mid()
++            if(message.mid is None):
++                print("Message mid was none, I must do something my friend")
++                message.mid = self._messageLayer.fetch_mid()
              message = serializer.serialize(message)
              if self.multicast:
                  self._unicast_socket.sendto(message, (host, port))
