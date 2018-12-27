@@ -16,6 +16,8 @@ client_chunk_handler(void *response)
 {
 	const uint8_t *chunk;
 	int len = coap_get_payload(response, &chunk);
+	
+	printf(".\n");
 }
 
 uint8_t
@@ -81,6 +83,7 @@ PROCESS_THREAD(publisher, ev, data)
 
 	#if TEMP_TOPIC
 	create_topic(&broker_addr, urls[1], "temperature", "50", request);
+	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 	#endif
 
@@ -94,39 +97,52 @@ PROCESS_THREAD(publisher, ev, data)
 	COAP_BLOCKING_REQUEST(&broker_addr, REMOTE_PORT, request, client_chunk_handler);
 	#endif
 
-	etimer_set(&temp_timer, TEMP_READ_INTERVAL*CLOCK_SECOND);
 	etimer_set(&acc_timer, ACCM_READ_INTERVAL*CLOCK_SECOND);
 
 	while(1) {
 		PROCESS_WAIT_EVENT();
 		if(ev == sensors_event && data == &button_sensor) {
+			printf("..\n");
 			if(alarm_on==1) {
 			    printf("A0\n");
-				size_msg = alarm_msg(0,FORCE_THRESHOLD,0,buf,DIM_BUF);//impose QUIET message
-				update_topic(&broker_addr,urls[4],buf,size_msg);			   	
+				size_msg = alarm_msg(0,0,0,buf,DIM_BUF);//impose QUIET message
+				update_topic(&broker_addr,urls[4],buf,size_msg,request);		
+				COAP_BLOCKING_REQUEST(&broker_addr,REMOTE_PORT, request,client_chunk_handler);	   	
 			    alarm_on = 0;
 		    } else {
 			   	printf("A1\n");          
 			    alarm_on = 1;
 		    }
 		}
+		#if TEMP_TOPIC
 		if( etimer_expired(&temp_timer) ) {
 			temp = tmp102_read_temp_x100();
 			size_msg = json_temp_msg(temp, buf, DIM_BUF);
-			update_topic(&broker_addr, urls[3], buf, size_msg);
+			update_topic(&broker_addr, urls[3], buf, size_msg,request);
+			COAP_BLOCKING_REQUEST(&broker_addr,REMOTE_PORT, request,client_chunk_handler);	   				
 			etimer_reset(&temp_timer);
-		} else if ( etimer_expired(&acc_timer) ) {
+		}
+		#endif
+
+		#if ALARM_TOPIC
+		if ( etimer_expired(&acc_timer) ) {
+			printf("-\n");
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
+			#if ACC_TOPIC
 			size_msg = json_accm_msg(x, y, z, buf, DIM_BUF);
-			update_topic(&broker_addr, urls[3], buf, size_msg);
+			update_topic(&broker_addr, urls[3], buf, size_msg,request);
+			COAP_BLOCKING_REQUEST(&broker_addr,REMOTE_PORT, request,client_chunk_handler);	   				
+			#endif
 			if(alarm_on){
 				size_msg = alarm_msg(x,y,z,buf,DIM_BUF);
-				update_topic(&broker_addr,urls[4],buf,size_msg);
+				update_topic(&broker_addr,urls[4],buf,size_msg,request);
+				COAP_BLOCKING_REQUEST(&broker_addr,REMOTE_PORT, request,client_chunk_handler);
 			}
 			etimer_reset(&acc_timer);
 		}
+		#endif
 	}
 
 	PROCESS_END();

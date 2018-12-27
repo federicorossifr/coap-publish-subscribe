@@ -47,17 +47,12 @@ void create_topic(uip_ipaddr_t *broker_addr,
 void update_topic(uip_ipaddr_t *broker_addr, 
 				  const char *service_url, 
 				  char *new_value, 
-				  uint8_t len)
+				  uint8_t len,
+				  coap_packet_t* request)
 {
-	static coap_packet_t pkt[1];
-	static uint8_t pkt_serialized[64];
-	static size_t size_pkt;
-	coap_init_message(pkt, COAP_TYPE_NON, COAP_PUT, coap_get_mid());
-	coap_set_header_uri_path(pkt, service_url);
-	coap_set_payload(pkt, (uint8_t *)new_value, len);
-	size_pkt = coap_serialize_message(pkt, pkt_serialized);
-	coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
-	PRINTF("update_topic. size_pkt:%d\n",size_pkt);
+	coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+	coap_set_header_uri_path(request, service_url);
+	coap_set_payload(request, (uint8_t *)new_value, len);
 }
 
 

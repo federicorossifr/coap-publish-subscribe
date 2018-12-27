@@ -47,7 +47,7 @@
 #define SUBSCRIBER 0
 
 #define TEMP_TOPIC 0
-#define ACC_TOPIC 1
+#define ACC_TOPIC 0
 #define ALARM_TOPIC 1
 /* Save some memory for the sky platform. */
 #undef NBR_TABLE_CONF_MAX_NEIGHBORS
