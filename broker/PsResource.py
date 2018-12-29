@@ -26,6 +26,8 @@ def delete_subtree(root_resource,base=False):
 
 """
 Base resource for the Publish/Subsribe topic.
+Follows the Composite Design Pattern to maintain a recursive list 
+of children.
 """
 class PsResource(Resource):
     def __init__(self, name="PsResource",coap_server=None):

@@ -2,9 +2,13 @@ from coapthon.server.coap import CoAP
 from PsResource import PsResource
 import sys
 
+"""
+    Main server class for the Broker application
+"""
 class CoAPServer(CoAP):
     def __init__(self, host, port):	
         CoAP.__init__(self, (host, port))
+        # Add the first base API ps/ resource
         self.add_resource('ps/', PsResource("PsResource",self))
 
 def main():
