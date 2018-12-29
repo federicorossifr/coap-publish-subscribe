@@ -22,8 +22,8 @@
 
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 const char *urls[] = { 	"ps", 
-					  	"ps/sensors"
-,					  	"ps/sensors/temperature",
+					  	"ps/sensors",
+					  	"ps/sensors/temperature",
 					 	"ps/sensors/accelerometer",
 					 	"ps/sensors/intrusion"
 					 };
