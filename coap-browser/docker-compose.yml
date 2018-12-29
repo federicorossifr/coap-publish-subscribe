@@ -1,0 +1,16 @@
+version: '2.1'
+
+services:
+  app:
+    image: "federicorossir/coap-browser"
+    ports:
+        - "8080:8080"
+    networks:
+      app_net:
+        ipv4_address: "192.168.1.100"
+networks:
+  app_net:
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
