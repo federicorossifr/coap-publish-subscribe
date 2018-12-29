@@ -123,6 +123,7 @@ PROCESS_THREAD(publisher, ev, data)
 		    }
 		}
 		if( etimer_expired(&temp_timer) ) {
+			/* I capture temperature, then I update temperature topic. */
 			temp = tmp102_read_temp_x100();
 			#if TEMP_TOPIC
 			size_msg = json_temp_msg(temp, buf, DIM_BUF);
@@ -130,6 +131,7 @@ PROCESS_THREAD(publisher, ev, data)
 			#endif
 			etimer_reset(&temp_timer);
 		} else if ( etimer_expired(&acc_timer) ) {
+			/* I capture values of accelerometer, then I update accelerometer and alarm topics. */
 			x = adxl345.value(X_AXIS);
 			y = adxl345.value(Y_AXIS);
 			z = adxl345.value(Z_AXIS);
