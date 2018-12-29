@@ -18,8 +18,8 @@ PROCESS(subscriber, "subscriber example process");
 AUTOSTART_PROCESSES(&subscriber);
 /*---------------------------------------------------------------------------*/
 //////////////SUBSCRIBE////////////////////////////////////////
-//Handles the response to the observe request and the following notifications
-
+//handles the alarm data sent by the publisher, turns on the 
+//leds if an alarm is set
 static void handleAlarmData(const uint8_t* data,int len) {
   printf("alarm: %s\n",(char*)data);
   if(strcmp((char*)data,"ALARM")==0)
@@ -28,9 +28,9 @@ static void handleAlarmData(const uint8_t* data,int len) {
     leds_off(LEDS_ALL);
 }
 
+//Handles the response to the observe request and the following notifications
 static void notification_callback(coap_observee_t *obs, void *notification,coap_notification_flag_t flag){
   int len = 0;
-  int i = 0;
   uint8_t *payload = NULL;
   if(notification) {
     len = coap_get_payload(notification, &payload);
@@ -56,13 +56,13 @@ PROCESS_THREAD(subscriber, ev, data){
   coap_init_engine();
   SERVER_NODE(server_ipaddr);
   etimer_set(&periodic_timer, WARMUP*CLOCK_SECOND);
+  //the sub waits for a period by doing nothing
   while(1) {
     PROCESS_WAIT_EVENT();
     if( etimer_expired(&periodic_timer)) {
       printf("observing\n");
       obsA = observe((char*)urls[4]);
     }
-
   }
   PROCESS_END();
 }
