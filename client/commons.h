@@ -28,6 +28,7 @@ const char *urls[] = { 	"ps",
 					 	"ps/sensors/intrusion"
 					 };
 
+#if PUBLISHER
 #define DIM_BUF 32
 static char buf[DIM_BUF]; 
 void create_topic(uip_ipaddr_t *broker_addr, 
@@ -59,6 +60,6 @@ void update_topic(uip_ipaddr_t *broker_addr,
 	coap_send_message(broker_addr, REMOTE_PORT, pkt_serialized, size_pkt);
 	PRINTF("update_topic. size_pkt:%d\n",size_pkt);
 }
-
+#endif
 
 #endif
