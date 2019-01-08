@@ -10,11 +10,11 @@
 #define ALARM_TOPIC 1
 
 /* Sensing interval */
-#define ACCM_READ_INTERVAL   2
+#define ACCM_READ_INTERVAL   1
 #define TEMP_READ_INTERVAL	 20
 
 /* Used to take over intrusion. */
-#define FORCE_THRESHOLD 20 
+#define FORCE_THRESHOLD 15 
 
 /*---------------------------------------------------------------------------*/
 PROCESS(publisher, "publisher");
